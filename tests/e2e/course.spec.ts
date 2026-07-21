@@ -7,8 +7,8 @@ test("navigates chapters, searches, and persists progress", async ({ page }) => 
   await page.getByRole("button", { name: "搜索课程" }).first().click();
   await page.getByRole("textbox", { name: "搜索关键词" }).fill("RAG");
   await page.getByRole("dialog").getByRole("link", { name: /RAG 私有知识库/ }).click();
+  await expect(page).toHaveURL(/\/chapter\/rag\/$/, { timeout: 15_000 });
   await expect(page.getByRole("heading", { level: 1 })).toContainText("RAG 检索增强生成");
-  expect(new URL(page.url()).pathname).toBe("/chapter/rag/");
 
   await page.getByRole("button", { name: "标记本章完成" }).click();
   await page.reload();
