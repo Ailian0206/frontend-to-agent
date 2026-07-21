@@ -11,7 +11,7 @@
 - 复用 Node.js 22、锁文件安装、lint、typecheck、unit、build 与 Playwright E2E 门禁。
 - 不复制数据库、Provider 边界、Supabase 或 PostgreSQL 等项目特有检查。
 - 不启用 `main` 分支保护，保留小型维护直推能力。
-- 独立审核以当前 `pr-review` 技能为准：Claude 只评论；如修复导致 head SHA 改变，必须重新审核当前 head。
+- 独立审核采用同级仓库的成本约束：每个 PR 只成功调用 Claude 一次；Claude 只评论，修复后的正确性由本地完整门禁和最终 CI 保证。
 
 ## 工作流设计
 
@@ -38,9 +38,8 @@
 
 1. 本地完整门禁通过后推送功能分支并创建 PR。
 2. 运行 `claude --permission-mode auto --model sonnet -p "/codex-independent-pr-review <PR编号>"`。
-3. Codex 技术核验评论；成立的问题在原 PR 分支修复、测试、提交并推送。
-4. head SHA 变化后重新运行独立审核，直至当前 head 通过。
-5. 当前 head 审核通过且 GitHub CI 通过后，使用 `gh pr merge <PR编号> --merge --delete-branch` 合并。
+3. Codex 技术核验评论；成立的问题在原 PR 分支修复、测试、提交并推送，不再次调用 Claude。
+4. Claude 的一次审核已完成、有效 finding 已处理且最终 GitHub CI 通过后，使用 `gh pr merge <PR编号> --merge --delete-branch` 合并。
 
 禁止 squash、rebase 和 force push。Claude 只审核和评论，不修改代码、不提交、不推送、不合并。
 
@@ -53,7 +52,7 @@ GitHub 仓库继续保持无分支保护的轻量模式，但关闭 squash merge
 - PR CI 文件可被 YAML 解析，权限为只读，触发范围符合设计。
 - PR 模板和仓库协作说明能完整描述轻量模式与独立审核闭环。
 - `npm run test:ci` 和 `npm run test:e2e` 本地通过。
-- 本次变更通过功能分支创建 PR，独立 Claude 对当前 head 审核通过，GitHub CI 通过。
+- 本次变更通过功能分支创建 PR，完成一次独立 Claude 审核并处理有效 finding，GitHub CI 通过。
 - PR 使用 merge commit 合并，远端功能分支被删除，Pages 发布成功。
 
 ## 不做项
