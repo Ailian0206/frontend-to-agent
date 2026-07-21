@@ -1,0 +1,37 @@
+{
+  "name": "knowledge-agent",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20.19"
+  },
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "ingest": "tsx src/ingest.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "test": "vitest run",
+    "check": "npm run build && npm test"
+  },
+  "dependencies": {
+    "@hono/node-server": "2.0.11",
+    "@langchain/core": "1.2.3",
+    "@langchain/langgraph": "1.4.8",
+    "@langchain/langgraph-checkpoint-postgres": "1.0.4",
+    "@langchain/openai": "1.5.5",
+    "@langchain/qdrant": "1.0.3",
+    "@langchain/textsplitters": "1.0.1",
+    "@qdrant/js-client-rest": "1.18.0",
+    "dotenv": "17.4.2",
+    "hono": "4.12.31",
+    "langchain": "1.5.3",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.1",
+    "tsx": "4.23.1",
+    "typescript": "7.0.2",
+    "vitest": "4.1.10"
+  }
+}
