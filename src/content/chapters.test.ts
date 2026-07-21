@@ -17,8 +17,25 @@ describe("course content", () => {
   });
 
   it("searches titles, goals, terms, and section headings", () => {
-    expect(searchChapters("RAG")[0]?.slug).toBe("core-concepts");
+    expect(searchChapters("RAG").map((chapter) => chapter.slug)).toContain("core-concepts");
     expect(searchChapters("Supervisor").some((chapter) => chapter.slug === "multi-agent")).toBe(true);
     expect(searchChapters("不存在的课程词")).toEqual([]);
+  });
+
+  it("searches code and body content", () => {
+    expect(searchChapters("nodemailer").map((chapter) => chapter.slug)).toContain("first-agent");
+    expect(searchChapters("ORDER_GATEWAY_TIMEOUT").map((chapter) => chapter.slug)).toContain("tool-calling");
+  });
+
+  it("bootstraps an explicit NodeNext ESM project before top-level await lessons", () => {
+    const setup = chapters[2].sections
+      .flatMap((section) => section.blocks)
+      .filter((block) => block.type === "code");
+    const terminal = setup.find((block) => block.filename === "terminal");
+    const tsconfig = setup.find((block) => block.filename === "tsconfig.json");
+
+    expect(terminal?.code).toContain("npm pkg set type=module");
+    expect(tsconfig?.code).toContain('"module": "NodeNext"');
+    expect(tsconfig?.code).toContain('"target": "ES2022"');
   });
 });

@@ -276,10 +276,29 @@ export const chapters: Chapter[] = [
             filename: "terminal",
             code: `mkdir agent-lab && cd agent-lab
 npm init -y
+npm pkg set type=module
 npm install langchain@1.5.3 @langchain/core@1.2.3 \\
   @langchain/openai@1.5.5 zod@4.4.3 dotenv@17.4.2
-npm install -D typescript@5.9.3 tsx@4.23.1 @types/node@22.20.1
-npx tsc --init`,
+npm install -D typescript@5.9.3 tsx@4.23.1 @types/node@22.20.1`,
+          },
+          {
+            type: "code",
+            language: "json",
+            filename: "tsconfig.json",
+            code: `{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "outDir": "dist"
+  },
+  "include": ["src/**/*.ts"]
+}`,
+            output: `运行：node --input-type=module -e "await Promise.resolve(); console.log('esm ok')"
+预期：输出 esm ok。后续章节的顶层 await 与 .js 导入扩展名均可正常工作。`,
           },
           {
             type: "code",
@@ -337,6 +356,7 @@ main().catch((error) => {
               "模型调用成功且 API Key 未写入源码",
               "能通过 OPENAI_BASE_URL 切换兼容服务而不修改业务代码",
               "package-lock.json 已生成并纳入版本控制",
+              "package.json 包含 type=module，tsconfig 使用 NodeNext 与 ES2022",
             ],
           },
         ],
@@ -445,7 +465,7 @@ const sendEmail = tool(async ({ to, subject, body }) => {
   name: "send_email",
   description: "向明确地址发送邮件。该工具有副作用，必须严格使用用户给出的收件人",
   schema: z.object({
-    to: z.string().email(),
+    to: z.email(),
     subject: z.string().min(1).max(120),
     body: z.string().min(1).max(5_000),
   }),
@@ -1517,7 +1537,10 @@ export function searchChapters(query: string): Chapter[] {
       chapter.shortTitle,
       chapter.goal,
       ...chapter.terms,
-      ...chapter.sections.map((section) => section.title),
+      ...chapter.sections.flatMap((section) => [
+        section.title,
+        ...section.blocks.map((block) => JSON.stringify(block)),
+      ]),
     ]
       .join(" ")
       .toLocaleLowerCase("zh-CN");

@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertTriangle } from "lucide-react";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 interface MermaidDiagramProps {
   title: string;
@@ -9,13 +9,14 @@ interface MermaidDiagramProps {
 }
 
 type DiagramState =
-  | { status: "loading" }
+  | { status: "idle" | "loading" }
   | { status: "ready"; svg: string }
   | { status: "error"; message: string };
 
 export function MermaidDiagram({ title, chart }: MermaidDiagramProps) {
   const reactId = useId();
-  const [state, setState] = useState<DiagramState>({ status: "loading" });
+  const hostRef = useRef<HTMLElement>(null);
+  const [state, setState] = useState<DiagramState>({ status: "idle" });
 
   useEffect(() => {
     let active = true;
@@ -23,6 +24,7 @@ export function MermaidDiagram({ title, chart }: MermaidDiagramProps) {
 
     async function renderDiagram(): Promise<void> {
       try {
+        setState({ status: "loading" });
         const mermaid = (await import("mermaid")).default;
         mermaid.initialize({
           startOnLoad: false,
@@ -41,7 +43,17 @@ export function MermaidDiagram({ title, chart }: MermaidDiagramProps) {
           flowchart: { curve: "basis", htmlLabels: true },
         });
         const { svg } = await mermaid.render(id, chart);
-        if (active) setState({ status: "ready", svg });
+        const documentNode = new DOMParser().parseFromString(svg, "image/svg+xml");
+        const svgNode = documentNode.documentElement;
+        const titleId = `${id}-title`;
+        const titleNode = documentNode.createElementNS("http://www.w3.org/2000/svg", "title");
+        titleNode.setAttribute("id", titleId);
+        titleNode.textContent = title;
+        svgNode.insertBefore(titleNode, svgNode.firstChild);
+        svgNode.setAttribute("role", "img");
+        svgNode.setAttribute("aria-labelledby", titleId);
+        const accessibleSvg = new XMLSerializer().serializeToString(svgNode);
+        if (active) setState({ status: "ready", svg: accessibleSvg });
       } catch (error) {
         if (active) {
           setState({
@@ -52,16 +64,26 @@ export function MermaidDiagram({ title, chart }: MermaidDiagramProps) {
       }
     }
 
-    void renderDiagram();
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          observer.disconnect();
+          void renderDiagram();
+        }
+      },
+      { rootMargin: "800px 0px" },
+    );
+    if (hostRef.current) observer.observe(hostRef.current);
     return () => {
       active = false;
+      observer.disconnect();
     };
-  }, [chart, reactId]);
+  }, [chart, reactId, title]);
 
   return (
-    <figure className="diagram-figure">
+    <figure className="diagram-figure" ref={hostRef}>
       <figcaption>{title}</figcaption>
-      {state.status === "loading" ? (
+      {state.status === "idle" || state.status === "loading" ? (
         <div className="diagram-skeleton" aria-label="图表加载中">
           <span />
           <span />
@@ -69,10 +91,13 @@ export function MermaidDiagram({ title, chart }: MermaidDiagramProps) {
         </div>
       ) : null}
       {state.status === "ready" ? (
-        <div
-          className="mermaid-canvas"
-          dangerouslySetInnerHTML={{ __html: state.svg }}
-        />
+        <>
+          <div
+            className="mermaid-canvas"
+            dangerouslySetInnerHTML={{ __html: state.svg }}
+          />
+          <p className="diagram-scroll-hint" aria-hidden="true">横向滑动查看完整图表</p>
+        </>
       ) : null}
       {state.status === "error" ? (
         <div className="diagram-error" role="alert">

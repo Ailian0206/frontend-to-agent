@@ -217,7 +217,7 @@ kbd {
   list-style: none;
 }
 
-.course-nav nav button {
+.course-nav nav a {
   position: relative;
   display: grid;
   width: 100%;
@@ -235,7 +235,7 @@ kbd {
   transition: background-color 150ms ease, color 150ms ease;
 }
 
-.course-nav nav button::before {
+.course-nav nav a::before {
   position: absolute;
   top: 7px;
   bottom: 7px;
@@ -248,18 +248,18 @@ kbd {
   transition: opacity 150ms ease, transform 150ms ease;
 }
 
-.course-nav nav button:hover {
+.course-nav nav a:hover {
   background: rgba(253, 253, 249, 0.75);
   color: var(--ink);
 }
 
-.course-nav nav button.active {
+.course-nav nav a.active {
   background: var(--paper-strong);
   color: var(--ink);
   font-weight: 650;
 }
 
-.course-nav nav button.active::before {
+.course-nav nav a.active::before {
   opacity: 1;
   transform: scaleY(1);
 }
@@ -348,9 +348,13 @@ kbd {
   background: var(--paper-strong);
 }
 
-.lesson-main article {
+.lesson-main article,
+.lesson-main > .lesson-footer {
   width: min(820px, calc(100% - 80px));
   margin: 0 auto;
+}
+
+.lesson-main article {
   padding: 68px 0 96px;
 }
 
@@ -463,10 +467,6 @@ kbd {
 
 .lesson-paragraph {
   margin: 0 0 22px;
-}
-
-.lesson-paragraph p {
-  margin: 0;
   color: var(--ink-soft);
   font-size: 16px;
   line-height: 1.9;
@@ -713,15 +713,19 @@ tbody tr:hover td {
   color: white;
 }
 
-.code-figure > pre {
+.highlighted-code {
   max-height: 620px;
-  margin: 0;
-  padding: 20px;
   overflow: auto;
+}
+
+.highlighted-code pre {
+  margin: 0 !important;
+  padding: 20px !important;
+  background: var(--code) !important;
   tab-size: 2;
 }
 
-.code-figure code,
+.highlighted-code code,
 .expected-output pre {
   font: 12px/1.72 var(--font-mono);
   white-space: pre;
@@ -778,6 +782,14 @@ tbody tr:hover td {
   width: 100%;
   max-width: 760px !important;
   height: auto;
+}
+
+.diagram-scroll-hint {
+  display: none;
+  margin: 10px 0 0;
+  color: var(--muted);
+  font: 10px/1.4 var(--font-mono);
+  text-align: center;
 }
 
 .diagram-skeleton {
@@ -847,7 +859,8 @@ tbody tr:hover td {
 
 .lesson-footer {
   display: flex;
-  margin-top: 78px;
+  margin-top: 0;
+  margin-bottom: 96px;
   padding-top: 28px;
   align-items: center;
   justify-content: space-between;
@@ -856,7 +869,7 @@ tbody tr:hover td {
 }
 
 .complete-button,
-.chapter-pagination button {
+.chapter-pagination a {
   display: inline-flex;
   height: 42px;
   padding: 0 14px;
@@ -883,20 +896,15 @@ tbody tr:hover td {
   gap: 7px;
 }
 
-.chapter-pagination button {
+.chapter-pagination a {
   border-color: var(--line-strong);
   background: transparent;
   color: var(--ink-soft);
 }
 
-.chapter-pagination button:hover:not(:disabled) {
+.chapter-pagination a:hover {
   border-color: var(--ink);
   color: var(--ink);
-}
-
-.chapter-pagination button:disabled {
-  cursor: not-allowed;
-  opacity: 0.38;
 }
 
 .lesson-outline {
@@ -933,6 +941,11 @@ tbody tr:hover td {
 .lesson-outline nav button:hover {
   color: var(--ink);
   transform: translateX(2px);
+}
+
+.lesson-outline nav button.active {
+  color: var(--ink);
+  font-weight: 650;
 }
 
 .lesson-outline nav button span {
@@ -982,8 +995,6 @@ tbody tr:hover td {
   inset: 0;
   width: 100%;
   height: 100%;
-  padding: 0;
-  border: 0;
   background: rgba(24, 27, 25, 0.48);
   backdrop-filter: blur(5px);
   cursor: default;
@@ -1037,7 +1048,7 @@ tbody tr:hover td {
   overflow-y: auto;
 }
 
-.search-results > button {
+.search-results > a {
   display: grid;
   width: 100%;
   min-height: 72px;
@@ -1052,11 +1063,11 @@ tbody tr:hover td {
   transition: background-color 150ms ease, transform 150ms ease;
 }
 
-.search-results > button:hover {
+.search-results > a:hover {
   background: var(--paper);
 }
 
-.search-results > button > span {
+.search-results > a > span {
   color: var(--accent);
   font: 700 11px/1 var(--font-mono);
 }
@@ -1159,12 +1170,15 @@ tbody tr:hover td {
     left: 0;
     width: min(88vw, 320px);
     height: 100dvh;
+    visibility: hidden;
     transform: translateX(-102%);
-    transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1), visibility 0s linear 280ms;
   }
 
   .course-nav.open {
+    visibility: visible;
     transform: translateX(0);
+    transition-delay: 0s;
   }
 
   .nav-close {
@@ -1189,8 +1203,12 @@ tbody tr:hover td {
     overflow: visible;
   }
 
-  .lesson-main article {
+  .lesson-main article,
+  .lesson-main > .lesson-footer {
     width: 100%;
+  }
+
+  .lesson-main article {
     padding: 34px 18px 70px;
   }
 
@@ -1243,8 +1261,8 @@ tbody tr:hover td {
     margin-left: -8px;
   }
 
-  .code-figure > pre {
-    padding: 17px;
+  .highlighted-code pre {
+    padding: 17px !important;
   }
 
   .diagram-figure {
@@ -1261,7 +1279,27 @@ tbody tr:hover td {
     width: 82px;
   }
 
+  .mermaid-canvas {
+    display: block;
+    min-height: 220px;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+  }
+
+  .mermaid-canvas svg {
+    width: auto;
+    min-width: 720px;
+    max-width: none !important;
+  }
+
+  .diagram-scroll-hint {
+    display: block;
+  }
+
   .lesson-footer {
+    margin-bottom: 70px;
+    padding-right: 18px;
+    padding-left: 18px;
     align-items: stretch;
     flex-direction: column;
   }

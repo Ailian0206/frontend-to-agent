@@ -3,6 +3,7 @@ import { serveStatic } from "@hono/node-server/serve-static";
 import { Hono } from "hono";
 import { z } from "zod";
 import { createKnowledgeAgent } from "./agent.js";
+import { invokeWithTimeout } from "./agent-run.js";
 import { env } from "./config.js";
 import { messageText } from "./format.js";
 
@@ -25,12 +26,16 @@ app.post("/api/chat", async (context) => {
     );
   }
 
-  const result = await agent.invoke(
-    { messages: [{ role: "user", content: input.data.message }] },
-    {
-      configurable: { thread_id: input.data.threadId },
-      recursionLimit: 12,
-    },
+  // Authentication and rate limiting belong at the trusted reverse-proxy/API boundary.
+  const result = await invokeWithTimeout(
+    (signal) => agent.invoke(
+      { messages: [{ role: "user", content: input.data.message }] },
+      {
+        configurable: { thread_id: input.data.threadId },
+        recursionLimit: 12,
+        signal,
+      },
+    ),
   );
 
   return context.json({

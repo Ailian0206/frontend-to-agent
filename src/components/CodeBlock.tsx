@@ -1,7 +1,5 @@
-"use client";
-
-import { Check, Copy } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { createHighlighter } from "shiki";
+import { CopyButton } from "./CopyButton";
 
 interface CodeBlockProps {
   language: string;
@@ -11,28 +9,31 @@ interface CodeBlockProps {
   output?: string;
 }
 
-export function CodeBlock({
+const languageAliases: Record<string, string> = {
+  text: "text",
+  bash: "bash",
+  typescript: "typescript",
+  json: "json",
+  yaml: "yaml",
+};
+
+const highlighterPromise = createHighlighter({
+  themes: ["github-dark-default"],
+  langs: ["text", "bash", "typescript", "json", "yaml"],
+});
+
+export async function CodeBlock({
   language,
   filename,
   code,
   caption,
   output,
 }: CodeBlockProps) {
-  const [copied, setCopied] = useState(false);
-  const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (resetTimer.current) clearTimeout(resetTimer.current);
-    };
-  }, []);
-
-  async function copyCode(): Promise<void> {
-    await navigator.clipboard.writeText(code);
-    setCopied(true);
-    if (resetTimer.current) clearTimeout(resetTimer.current);
-    resetTimer.current = setTimeout(() => setCopied(false), 1_500);
-  }
+  const highlighter = await highlighterPromise;
+  const highlighted = highlighter.codeToHtml(code, {
+    lang: languageAliases[language] ?? "text",
+    theme: "github-dark-default",
+  });
 
   return (
     <figure className="code-figure">
@@ -41,19 +42,12 @@ export function CodeBlock({
           <span className="code-language">{language}</span>
           <span className="code-filename">{filename}</span>
         </div>
-        <button
-          type="button"
-          className="icon-button code-copy"
-          onClick={copyCode}
-          aria-label={copied ? "已复制代码" : "复制代码"}
-          title={copied ? "已复制" : "复制代码"}
-        >
-          {copied ? <Check size={16} /> : <Copy size={16} />}
-        </button>
+        <CopyButton code={code} />
       </div>
-      <pre>
-        <code>{code}</code>
-      </pre>
+      <div
+        className="highlighted-code"
+        dangerouslySetInnerHTML={{ __html: highlighted }}
+      />
       {output ? (
         <div className="expected-output">
           <strong>验证方法</strong>

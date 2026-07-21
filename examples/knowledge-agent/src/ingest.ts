@@ -34,6 +34,11 @@ async function resetCollection(): Promise<void> {
   const exists = collections.some(
     (collection) => collection.name === env.QDRANT_COLLECTION,
   );
+  if (exists && !process.argv.includes("--reset")) {
+    throw new Error(
+      `Collection ${env.QDRANT_COLLECTION} already exists. Run npm run ingest -- --reset to rebuild it.`,
+    );
+  }
   if (exists) await client.deleteCollection(env.QDRANT_COLLECTION);
 }
 

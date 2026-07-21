@@ -4,8 +4,7 @@ import {
   CircleCheck,
   Info,
 } from "lucide-react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import type { ReactNode } from "react";
 import type { ContentBlock } from "@/content/types";
 import { CodeBlock } from "./CodeBlock";
 import { MermaidDiagram } from "./MermaidDiagram";
@@ -14,23 +13,23 @@ interface ContentRendererProps {
   blocks: ContentBlock[];
 }
 
-function MarkdownText({ text }: { text: string }) {
-  return (
-    <ReactMarkdown
-      remarkPlugins={[remarkGfm]}
-      components={{
-        p: ({ children }) => <p>{children}</p>,
-        code: ({ children }) => <code className="inline-code">{children}</code>,
-        a: ({ children, href }) => (
-          <a href={href} target="_blank" rel="noreferrer">
-            {children}
-          </a>
-        ),
-      }}
-    >
-      {text}
-    </ReactMarkdown>
-  );
+function InlineText({ text }: { text: string }) {
+  const pattern = /(`[^`]+`|\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\))/g;
+  const parts = text.split(pattern);
+
+  return parts.map<ReactNode>((part, index) => {
+    if (part.startsWith("`") && part.endsWith("`")) {
+      return <code className="inline-code" key={index}>{part.slice(1, -1)}</code>;
+    }
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return <strong key={index}>{part.slice(2, -2)}</strong>;
+    }
+    const link = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+    if (link) {
+      return <a href={link[2]} target="_blank" rel="noreferrer" key={index}>{link[1]}</a>;
+    }
+    return part;
+  });
 }
 
 const calloutIcon = {
@@ -45,11 +44,7 @@ export function ContentRenderer({ blocks }: ContentRendererProps) {
 
     switch (block.type) {
       case "paragraph":
-        return (
-          <div className="lesson-paragraph" key={key}>
-            <MarkdownText text={block.text} />
-          </div>
-        );
+        return <p className="lesson-paragraph" key={key}><InlineText text={block.text} /></p>;
       case "quote":
         return (
           <figure className="lesson-quote" key={key}>
@@ -64,10 +59,7 @@ export function ContentRenderer({ blocks }: ContentRendererProps) {
         return (
           <ul className="lesson-list" key={key}>
             {block.items.map((item) => (
-              <li key={item}>
-                <span />
-                <MarkdownText text={item} />
-              </li>
+              <li key={item}><span /><p><InlineText text={item} /></p></li>
             ))}
           </ul>
         );
@@ -77,10 +69,7 @@ export function ContentRenderer({ blocks }: ContentRendererProps) {
             {block.items.map((item, itemIndex) => (
               <li key={item.title}>
                 <span>{String(itemIndex + 1).padStart(2, "0")}</span>
-                <div>
-                  <strong>{item.title}</strong>
-                  <p>{item.detail}</p>
-                </div>
+                <div><strong>{item.title}</strong><p>{item.detail}</p></div>
               </li>
             ))}
           </ol>
@@ -90,10 +79,7 @@ export function ContentRenderer({ blocks }: ContentRendererProps) {
         return (
           <aside className={`lesson-callout ${block.tone}`} key={key}>
             <Icon size={19} />
-            <div>
-              <strong>{block.title}</strong>
-              <p>{block.text}</p>
-            </div>
+            <div><strong>{block.title}</strong><p>{block.text}</p></div>
           </aside>
         );
       }
@@ -101,19 +87,11 @@ export function ContentRenderer({ blocks }: ContentRendererProps) {
         return (
           <div className="table-scroll" key={key}>
             <table>
-              <thead>
-                <tr>
-                  {block.headers.map((header) => (
-                    <th key={header}>{header}</th>
-                  ))}
-                </tr>
-              </thead>
+              <thead><tr>{block.headers.map((header) => <th key={header}>{header}</th>)}</tr></thead>
               <tbody>
                 {block.rows.map((row, rowIndex) => (
                   <tr key={`${row[0]}-${rowIndex}`}>
-                    {row.map((cell, cellIndex) => (
-                      <td key={`${cell}-${cellIndex}`}>{cell}</td>
-                    ))}
+                    {row.map((cell, cellIndex) => <td key={`${cell}-${cellIndex}`}>{cell}</td>)}
                   </tr>
                 ))}
               </tbody>
@@ -127,15 +105,8 @@ export function ContentRenderer({ blocks }: ContentRendererProps) {
       case "checkpoint":
         return (
           <aside className="checkpoint" key={key}>
-            <header>
-              <CircleCheck size={21} />
-              <strong>{block.title}</strong>
-            </header>
-            <ul>
-              {block.criteria.map((criterion) => (
-                <li key={criterion}>{criterion}</li>
-              ))}
-            </ul>
+            <header><CircleCheck size={21} /><strong>{block.title}</strong></header>
+            <ul>{block.criteria.map((criterion) => <li key={criterion}>{criterion}</li>)}</ul>
           </aside>
         );
     }
