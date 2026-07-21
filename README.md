@@ -36,11 +36,14 @@ npm run test:e2e
 npm run build
 ```
 
+里程碑变更使用功能分支和 PR，并经过只读 CI 与一次独立 Claude 审核；小型维护可在完整验证后直接推送 `main`。完整规则见 [`docs/github-review-workflow.md`](docs/github-review-workflow.md)。
+
 ## 项目结构
 
 ```text
 frontend-to-agent/
-├── .github/workflows/       # GitHub Pages 自动部署
+├── .github/                 # PR 模板、PR CI 与 GitHub Pages 部署
+├── docs/                    # 审核报告与 GitHub 协作规范
 ├── examples/knowledge-agent # 最终实战项目
 ├── src/app                  # Next.js 页面与视觉系统
 ├── src/components           # 课程、代码、图表组件

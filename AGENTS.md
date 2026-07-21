@@ -6,3 +6,6 @@
 4. Do not call paid model providers in automated tests.
 5. Run `npm run test:ci` before pushing milestone changes.
 6. Use Chinese Conventional Commits and never commit secrets.
+7. Follow [`docs/github-review-workflow.md`](docs/github-review-workflow.md) for branch, PR, CI, review, and merge decisions.
+8. Milestone PRs get exactly one successful independent Claude review; fixes are verified by local gates and final CI without a second review.
+9. Merge PRs with a merge commit. Do not squash, rebase, amend, or force push.
