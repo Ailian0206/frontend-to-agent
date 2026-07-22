@@ -1443,6 +1443,71 @@ tbody tr:hover td {
   text-decoration: underline;
 }
 
+.graduate-page .graduate-progress {
+  margin: 12px 0 0;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+.graduate-page .graduate-capstone {
+  margin: 0 0 24px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.graduate-page .graduate-capstone h2 {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+}
+
+.graduate-page .graduate-capstone p {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.graduate-page .graduate-capstone a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.graduate-page .graduate-capstone a:hover {
+  text-decoration: underline;
+}
+
+.graduate-skill-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 0 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.graduate-skill-check input {
+  margin-top: 4px;
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  accent-color: var(--accent);
+}
+
+.graduate-skill-title {
+  font-size: 1.1rem;
+}
+
+.graduate-skill-card p {
+  margin: 0 0 4px;
+  padding-left: 26px;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.graduate-skill-card .skill-links {
+  padding-left: 26px;
+}
+
 .nav-actions {
   display: grid;
   gap: 8px;

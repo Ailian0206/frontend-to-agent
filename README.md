@@ -1,6 +1,6 @@
 # Frontend to Agent
 
-面向 10 年以上前端工程师的 AI Agent 系统学习网站。课程以 Node.js、TypeScript、LangChain.js 和 LangGraph.js 为主线，覆盖 Prompt、Tool Calling、流式 UI、RAG、HITL、多 Agent、MCP、评估安全，直到可部署的个人知识库 Agent。
+面向前端工程师的 AI Agent 系统学习网站。课程以 Node.js、TypeScript、LangChain.js 和 LangGraph.js 为主线，覆盖 Prompt、Tool Calling、流式 UI、RAG、HITL、多 Agent、MCP、评估安全，直到可部署的个人知识库 Agent。
 
 ## 在线课程
 
@@ -16,6 +16,10 @@ GitHub Pages 部署完成后访问：
 
 <https://ailian0206.github.io/frontend-to-agent/skills/>
 
+毕业验收：
+
+<https://ailian0206.github.io/frontend-to-agent/graduate/>
+
 ## 课程能力
 
 - 四层内容结构：课程 / 实验 Lab / 选修 / 作品集
@@ -28,6 +32,8 @@ GitHub Pages 部署完成后访问：
 - 桌面三栏学习工作台与移动端目录抽屉
 - `examples/knowledge-agent` 完整知识库 Agent 项目
 - `examples/lab-l01-structured-output` … `lab-l08-eval-guardrail`
+- 作品集：`examples/knowledge-agent`（HITL、离线评估≥30、护栏、演示路径）
+- 毕业验收页：`/graduate`
 
 ## Labs（M2–M4）
 

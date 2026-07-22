@@ -21,6 +21,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly" as const,
       priority: 0.95,
     },
+    {
+      url: `${siteOrigin}/graduate/`,
+      changeFrequency: "weekly" as const,
+      priority: 0.95,
+    },
     ...chapters.map((chapter) => ({
       url: `${siteOrigin}/chapter/${chapter.slug}/`,
       changeFrequency: "monthly" as const,

@@ -101,6 +101,23 @@ test("opens skills map", async ({ page }) => {
   await expect(page.getByRole("button", { name: "标记本章完成" })).toHaveCount(0);
 });
 
+test("opens graduate checklist without seniority copy", async ({ page }) => {
+  await page.goto("/graduate/");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("毕业验收");
+  const main = page.locator("main");
+  await expect(main.getByText(/S1 · LLM 控制面/)).toBeVisible();
+  await expect(main.getByRole("checkbox").first()).toBeVisible();
+  await expect(page.getByRole("button", { name: "标记本章完成" })).toHaveCount(0);
+  await expect(page.locator("main")).not.toContainText("10 年以上");
+  await expect(page.locator("main")).not.toContainText("10年以上");
+
+  const openMenu = page.getByRole("button", { name: "打开课程目录" });
+  if (await openMenu.isVisible()) {
+    await openMenu.click();
+    await expect(page.getByText("毕业验收", { exact: true }).first()).toBeVisible();
+  }
+});
+
 test("opens shipped lab L01 without coming-soon chrome", async ({ page }) => {
   await page.goto("/chapter/lab-l01/");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("结构化输出");
