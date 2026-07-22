@@ -5,13 +5,13 @@ import type { Chapter } from "../types";
 import { evalSecurityChapter } from "./eval-security";
 import { hitlChapter } from "./human-in-the-loop";
 import { mcpChapter } from "./mcp-protocol";
-import { productionOpsIntroChapter } from "./production-ops-stub";
+import { productionOpsChapters } from "./production-ops";
 import { promptStructuredChapter } from "./prompt-structured";
 import { streamingUiChapter } from "./streaming-ui";
 
 /**
  * Assemble curriculum layers: lessons → labs → electives → capstone → roadmap,
- * then production-ops stubs (separate top-level course).
+ * then production-ops lessons (separate top-level course).
  */
 const lessonChapters: Omit<Chapter, "number">[] = [
   baseChapters[0], // why-agent
@@ -36,7 +36,7 @@ const orderedWithoutNumbers: Omit<Chapter, "number">[] = [
   ...electivePlaceholders,
   baseChapters[9], // capstone
   baseChapters[10], // roadmap
-  productionOpsIntroChapter,
+  ...productionOpsChapters,
 ];
 
 export const chapters: Chapter[] = orderedWithoutNumbers.map((chapter, index) => ({
@@ -73,6 +73,14 @@ export function blockSearchText(block: Chapter["sections"][number]["blocks"][num
       return `${block.title} ${block.criteria.join(" ")}`;
     case "resources":
       return `${block.title} ${block.items.map((item) => `${item.title} ${item.note} ${item.url}`).join(" ")}`;
+    case "screenshot":
+      return [
+        block.title,
+        block.alt,
+        block.capturedAt,
+        ...block.legend.map((item) => `${item.label} ${item.title} ${item.detail}`),
+        block.sourceUrl ?? "",
+      ].join(" ");
     default:
       return "";
   }

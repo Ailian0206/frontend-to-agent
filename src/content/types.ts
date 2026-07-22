@@ -18,6 +18,12 @@ export type ContentKind = "lesson" | "lab" | "elective" | "capstone";
 /** Top-level course in the left-nav switcher (Agent vs production ops). */
 export type CurriculumId = "agent" | "production-ops";
 
+export interface ScreenshotLegendItem {
+  label: string;
+  title: string;
+  detail: string;
+}
+
 /** JD-aligned skill IDs from the curriculum skill map. */
 export type SkillId =
   | "S1"
@@ -71,6 +77,18 @@ export type ContentBlock =
         kind: ResourceKind;
         note: string;
       }[];
+    }
+  | {
+      type: "screenshot";
+      src: string;
+      alt: string;
+      title: string;
+      capturedAt: string;
+      imageKind: "real" | "illustration";
+      width: number;
+      height: number;
+      legend: ScreenshotLegendItem[];
+      sourceUrl?: string;
     };
 
 export interface LessonSection {

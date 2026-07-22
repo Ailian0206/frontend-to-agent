@@ -108,7 +108,7 @@ test("switches top-level curriculum and collapses kind groups", async ({ page },
   await expect(page).toHaveURL(/production-ops-intro/, { timeout: 15_000 });
   await ensureNavOpen();
   await expect(page.getByRole("tab", { name: "生产运维" })).toHaveAttribute("aria-selected", "true");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("生产部署与运维");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("P01 托管生产系统地图");
   await expect(page.getByRole("link", { name: /能力地图/ })).toHaveCount(0);
 
   await page.getByRole("tab", { name: "AI Agent" }).click();
@@ -176,4 +176,22 @@ test("opens shipped lab L07 and elective E1", async ({ page }) => {
   await page.goto("/chapter/elective-e1/");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("网关");
   await expect(page.getByText("本实验将在后续里程碑提供可运行仓库")).toHaveCount(0);
+});
+
+test("searches production platforms and renders annotated screenshots", async ({ page }) => {
+  await page.goto("/chapter/vercel-core-operations/");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("P03 Vercel");
+  await expect(page.getByRole("figure", { name: /Deployments 列表/ }).first()).toBeVisible();
+  await expect(page.getByText("记录于 2026-07-22").first()).toBeVisible();
+
+  await page.getByRole("button", { name: "搜索课程" }).first().click();
+  await page.getByRole("textbox", { name: "搜索关键词" }).fill("Replay");
+  await expect(page.getByRole("dialog").getByRole("link", { name: /Inngest/ }).first()).toBeVisible();
+});
+
+test("keeps production screenshots within the viewport", async ({ page }) => {
+  await page.goto("/chapter/supabase-auth-rls-recovery/");
+  await page.locator(".annotated-screenshot").first().scrollIntoViewIfNeeded();
+  await expect(page.locator(".annotated-screenshot img").first()).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
 });
