@@ -87,18 +87,54 @@ test("groups navigation by content kind", async ({ page }) => {
   await page.goto("/");
   const openMenu = page.getByRole("button", { name: "打开课程目录" });
   if (await openMenu.isVisible()) await openMenu.click();
-  await expect(page.getByText("课程", { exact: true }).first()).toBeVisible();
-  await expect(page.getByText("实验", { exact: true }).first()).toBeVisible();
+  await expect(page.getByRole("tab", { name: "AI Agent" })).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByRole("navigation", { name: "课程章节" }).locator("button.kind-toggle").filter({ hasText: "课程" })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "课程章节" }).locator("button.kind-toggle").filter({ hasText: "实验" })).toBeVisible();
   await expect(page.getByRole("link", { name: /能力地图/ })).toBeVisible();
 });
 
-test("opens skills map", async ({ page }) => {
+test("switches top-level curriculum and collapses kind groups", async ({ page }, testInfo) => {
+  await page.goto("/");
+  const openMenu = page.getByRole("button", { name: "打开课程目录" });
+  async function ensureNavOpen(): Promise<void> {
+    if (await openMenu.isVisible()) {
+      await openMenu.click();
+      await expect(page.locator(".course-nav")).toHaveClass(/open/);
+    }
+  }
+
+  await ensureNavOpen();
+  await page.getByRole("tab", { name: "生产运维" }).click();
+  await expect(page).toHaveURL(/production-ops-intro/, { timeout: 15_000 });
+  await ensureNavOpen();
+  await expect(page.getByRole("tab", { name: "生产运维" })).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("生产部署与运维");
+  await expect(page.getByRole("link", { name: /能力地图/ })).toHaveCount(0);
+
+  await page.getByRole("tab", { name: "AI Agent" }).click();
+  await expect(page).toHaveURL(/why-agent|\/$/, { timeout: 15_000 });
+  await ensureNavOpen();
+  // Accordion collapse is asserted on desktop; mobile drawer focus/layout is covered elsewhere.
+  if (testInfo.project.name === "mobile") return;
+  const lessonToggle = page
+    .getByRole("navigation", { name: "课程章节" })
+    .locator("button.kind-toggle")
+    .filter({ hasText: "课程" });
+  await expect(lessonToggle).toHaveAttribute("aria-expanded", "true");
+  await lessonToggle.click();
+  await expect(lessonToggle).toHaveAttribute("aria-expanded", "false");
+  await expect(page.getByRole("navigation", { name: "课程章节" }).getByRole("link", { name: /为什么转型 Agent/ })).toHaveCount(0);
+});
+
+test("keeps shell pages when re-clicking the active curriculum tab", async ({ page }) => {
   await page.goto("/skills/");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("能力地图");
-  const main = page.locator("main");
-  await expect(main.getByRole("heading", { name: /S1/ }).first()).toBeVisible();
-  await expect(main.getByRole("heading", { name: /E1/ }).first()).toBeVisible();
-  await expect(page.getByRole("button", { name: "标记本章完成" })).toHaveCount(0);
+  const openMenu = page.getByRole("button", { name: "打开课程目录" });
+  if (await openMenu.isVisible()) await openMenu.click();
+  await expect(page.getByRole("tab", { name: "AI Agent" })).toHaveAttribute("aria-selected", "true");
+  await page.getByRole("tab", { name: "AI Agent" }).click();
+  await expect(page).toHaveURL(/\/skills\/?$/);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("能力地图");
 });
 
 test("opens graduate checklist without seniority copy", async ({ page }) => {

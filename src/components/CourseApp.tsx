@@ -6,6 +6,7 @@ import {
   BookOpen,
   Check,
   CheckCircle2,
+  ChevronDown,
   CodeXml,
   ExternalLink,
   GraduationCap,
@@ -16,7 +17,7 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   type ReactNode,
   useEffect,
@@ -26,16 +27,54 @@ import {
   useSyncExternalStore,
 } from "react";
 import {
+  curricula,
+  curriculumMeta,
+  defaultCurriculumId,
+  isCurriculumId,
+} from "@/content/curricula";
+import {
+  filterChaptersByCurriculum,
   groupChaptersByKind,
   type ChapterSearchItem,
   type ChapterSummary,
 } from "@/content/course-index";
 import { getResource } from "@/content/resources";
 import { siteOrigin } from "@/content/site";
+import type { ContentKind, CurriculumId } from "@/content/types";
 
 const progressKey = "frontend-to-agent:completed";
 const progressEvent = "frontend-to-agent:progress";
+const curriculumKey = "frontend-to-agent:curriculum";
+const curriculumEvent = "frontend-to-agent:curriculum";
 const mobileQuery = "(max-width: 760px)";
+
+function readStoredCurriculum(): CurriculumId {
+  if (typeof window === "undefined") return defaultCurriculumId;
+  const stored = window.localStorage.getItem(curriculumKey);
+  return stored && isCurriculumId(stored) ? stored : defaultCurriculumId;
+}
+
+function subscribeToCurriculum(callback: () => void): () => void {
+  window.addEventListener("storage", callback);
+  window.addEventListener(curriculumEvent, callback);
+  return () => {
+    window.removeEventListener("storage", callback);
+    window.removeEventListener(curriculumEvent, callback);
+  };
+}
+
+function getCurriculumSnapshot(): string {
+  return readStoredCurriculum();
+}
+
+function persistCurriculum(id: CurriculumId): void {
+  window.localStorage.setItem(curriculumKey, id);
+  window.dispatchEvent(new Event(curriculumEvent));
+}
+
+function kindExpandedKey(curriculum: CurriculumId): string {
+  return `frontend-to-agent:kind-expanded:${curriculum}`;
+}
 
 function parseStoredProgress(value: string): string[] {
   try {
@@ -98,6 +137,7 @@ export function CourseApp({
   searchIndex,
   children,
 }: CourseAppProps) {
+  const router = useRouter();
   const progressSnapshot = useSyncExternalStore(subscribeToProgress, getProgressSnapshot, () => "[]");
   const isMobile = useSyncExternalStore(subscribeToMobile, getMobileSnapshot, () => false);
   const pathname = usePathname();
@@ -107,25 +147,71 @@ export function CourseApp({
   const [query, setQuery] = useState("");
   const [activeSection, setActiveSection] = useState(activeChapter?.sections[0]?.id ?? "");
   const [shareStatus, setShareStatus] = useState<"idle" | "copied" | "failed">("idle");
+  // Prefer URL chapter ownership; shell pages read the last course from localStorage after hydrate.
+  const storedCurriculum = useSyncExternalStore(
+    subscribeToCurriculum,
+    getCurriculumSnapshot,
+    () => defaultCurriculumId,
+  );
+  const [expandedKinds, setExpandedKinds] = useState<ContentKind[]>(() =>
+    activeChapter ? [activeChapter.kind] : ["lesson"],
+  );
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchDialogRef = useRef<HTMLDivElement>(null);
   const searchReturnFocusRef = useRef<HTMLElement | null>(null);
   const mobileMenuButtonRef = useRef<HTMLButtonElement>(null);
   const mobileCloseButtonRef = useRef<HTMLButtonElement>(null);
 
+  const resourcesActive = pathname.startsWith("/resources");
+  const skillsActive = pathname.startsWith("/skills");
+  const graduateActive = pathname.startsWith("/graduate");
+  const activeCurriculum =
+    activeChapter?.curriculum ??
+    (skillsActive || graduateActive
+      ? defaultCurriculumId
+      : isCurriculumId(storedCurriculum)
+        ? storedCurriculum
+        : defaultCurriculumId);
+  const showAgentExtras = activeCurriculum === "agent";
+
+  // Keep accordion open for the active chapter's kind without an effect setState.
+  const [expandedForSlug, setExpandedForSlug] = useState(activeChapter?.slug ?? "");
+  if (activeChapter && activeChapter.slug !== expandedForSlug) {
+    setExpandedForSlug(activeChapter.slug);
+    if (!expandedKinds.includes(activeChapter.kind)) {
+      setExpandedKinds([...expandedKinds, activeChapter.kind]);
+    }
+  }
+
+  const visibleChapters = useMemo(
+    () => filterChaptersByCurriculum(chapters, activeCurriculum),
+    [chapters, activeCurriculum],
+  );
+  const visibleSearchIndex = useMemo(
+    () => filterChaptersByCurriculum(searchIndex, activeCurriculum),
+    [searchIndex, activeCurriculum],
+  );
+  const activeMeta = curriculumMeta(activeCurriculum);
+
   const chapterIndex = activeChapter
-    ? chapters.findIndex((chapter) => chapter.slug === activeChapter.slug)
+    ? visibleChapters.findIndex((chapter) => chapter.slug === activeChapter.slug)
     : -1;
-  const previousChapter = chapterIndex > 0 ? chapters[chapterIndex - 1] : undefined;
-  const nextChapter = chapterIndex >= 0 ? chapters[chapterIndex + 1] : undefined;
+  const previousChapter = chapterIndex > 0 ? visibleChapters[chapterIndex - 1] : undefined;
+  const nextChapter = chapterIndex >= 0 ? visibleChapters[chapterIndex + 1] : undefined;
   const results = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase("zh-CN");
     return normalized
-      ? searchIndex.filter((chapter) => chapter.searchText.includes(normalized))
-      : searchIndex;
-  }, [query, searchIndex]);
-  const progress = Math.round((completed.length / chapters.length) * 100);
-  const kindGroups = useMemo(() => groupChaptersByKind(chapters), [chapters]);
+      ? visibleSearchIndex.filter((chapter) => chapter.searchText.includes(normalized))
+      : visibleSearchIndex;
+  }, [query, visibleSearchIndex]);
+  const completedInCurriculum = useMemo(
+    () => completed.filter((slug) => visibleChapters.some((chapter) => chapter.slug === slug)),
+    [completed, visibleChapters],
+  );
+  const progress = visibleChapters.length
+    ? Math.round((completedInCurriculum.length / visibleChapters.length) * 100)
+    : 0;
+  const kindGroups = useMemo(() => groupChaptersByKind(visibleChapters), [visibleChapters]);
   const relatedResources = useMemo(
     () =>
       (activeChapter?.relatedResources ?? [])
@@ -133,9 +219,37 @@ export function CourseApp({
         .filter((resource): resource is NonNullable<typeof resource> => Boolean(resource)),
     [activeChapter?.relatedResources],
   );
-  const resourcesActive = pathname.startsWith("/resources");
-  const skillsActive = pathname.startsWith("/skills");
-  const graduateActive = pathname.startsWith("/graduate");
+
+  useEffect(() => {
+    if (!activeChapter) return;
+    persistCurriculum(activeChapter.curriculum);
+  }, [activeChapter]);
+
+  useEffect(() => {
+    window.localStorage.setItem(kindExpandedKey(activeCurriculum), JSON.stringify(expandedKinds));
+  }, [activeCurriculum, expandedKinds]);
+
+  function selectCurriculum(next: CurriculumId): void {
+    persistCurriculum(next);
+    setExpandedKinds(activeChapter?.curriculum === next && activeChapter ? [activeChapter.kind] : ["lesson"]);
+    // Use activeCurriculum (not activeChapter) so shell pages like /skills don't force-navigate.
+    if (activeCurriculum === next) return;
+    const first = filterChaptersByCurriculum(chapters, next)[0];
+    if (first) {
+      router.push(chapterHref(first.slug));
+      queueMicrotask(() => {
+        setSearchOpen(false);
+        setMobileNavOpen(false);
+        setQuery("");
+      });
+    }
+  }
+
+  function toggleKind(kind: ContentKind): void {
+    setExpandedKinds((current) =>
+      current.includes(kind) ? current.filter((item) => item !== kind) : [...current, kind],
+    );
+  }
 
   // Close overlays after the router has accepted navigation (do not sync-close in click handlers).
   function scheduleCloseOverlays(): void {
@@ -284,17 +398,17 @@ export function CourseApp({
           title="课程目录"
         ><Menu size={19} /></button>
         <div className="mobile-brand">
-          <strong>Frontend → Agent</strong>
+          <strong>{activeMeta.shortTitle}</strong>
           <span>
             {activeChapter
-              ? `${String(activeChapter.number).padStart(2, "0")} / ${chapters.length}`
+              ? `${String(chapterIndex + 1).padStart(2, "0")} / ${visibleChapters.length}`
               : skillsActive
                 ? "能力地图"
                 : graduateActive
                   ? "毕业验收"
                   : resourcesActive
                     ? "资源库"
-                    : "课程"}
+                    : activeMeta.title}
           </span>
         </div>
         <button className="icon-button" type="button" onClick={openSearch} aria-label="搜索课程" title="搜索课程">
@@ -308,7 +422,7 @@ export function CourseApp({
       >
         <div className="nav-brand">
           <div className="brand-mark" aria-hidden="true"><span>F</span><ArrowRight size={13} /><span>A</span></div>
-          <div><strong>Frontend to Agent</strong><span>资深前端转型教程</span></div>
+          <div><strong>Frontend to Agent</strong><span>{activeMeta.title}</span></div>
           <button
             ref={mobileCloseButtonRef}
             className="icon-button nav-close"
@@ -318,41 +432,77 @@ export function CourseApp({
           ><X size={18} /></button>
         </div>
 
-        <button className="search-trigger" type="button" onClick={openSearch}>
-          <Search size={17} /><span>搜索课程</span><kbd>/</kbd>
+        <div className="curriculum-switcher" role="tablist" aria-label="选择课程">
+          {curricula.map((item) => {
+            const selected = item.id === activeCurriculum;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                role="tab"
+                className={selected ? "active" : ""}
+                aria-selected={selected}
+                onClick={() => selectCurriculum(item.id)}
+              >
+                {item.shortTitle}
+              </button>
+            );
+          })}
+        </div>
+
+        <button className="search-trigger" type="button" onClick={openSearch} aria-label="搜索课程">
+          <Search size={17} /><span>搜索当前课程</span><kbd>/</kbd>
         </button>
 
         <nav aria-label="课程章节">
           <p className="nav-label">按内容形态浏览</p>
-          {kindGroups.map((group) => (
-            <div className="kind-group" key={group.kind}>
-              <p className="kind-label">{group.label}</p>
-              <ol>
-                {group.chapters.map((chapter) => {
-                  const active = Boolean(activeChapter && chapter.slug === activeChapter.slug);
-                  const done = completed.includes(chapter.slug);
-                  return (
-                    <li key={chapter.slug}>
-                      <Link
-                        className={`${active ? "active" : ""}${chapter.comingSoon ? " coming-soon" : ""}`}
-                        href={chapterHref(chapter.slug)}
-                        aria-current={active ? "page" : undefined}
-                        onClick={scheduleCloseOverlays}
-                      >
-                        <span className={`chapter-state ${done ? "done" : ""}`}>
-                          {done ? <Check size={12} /> : String(chapter.number).padStart(2, "0")}
-                        </span>
-                        <span className="chapter-nav-title">
-                          {chapter.shortTitle}
-                          {chapter.comingSoon ? <em className="coming-soon-badge">即将</em> : null}
-                        </span>
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ol>
-            </div>
-          ))}
+          {kindGroups.length === 0 ? (
+            <p className="nav-empty">本课程目录即将上线。</p>
+          ) : (
+            kindGroups.map((group) => {
+              const expanded = expandedKinds.includes(group.kind);
+              return (
+                <div className={`kind-group ${expanded ? "expanded" : "collapsed"}`} key={group.kind}>
+                  <button
+                    type="button"
+                    className="kind-toggle"
+                    aria-expanded={expanded}
+                    onClick={() => toggleKind(group.kind)}
+                  >
+                    <span className="kind-label">{group.label}</span>
+                    <span className="kind-count">{group.chapters.length}</span>
+                    <ChevronDown size={15} aria-hidden="true" />
+                  </button>
+                  {expanded ? (
+                    <ol>
+                      {group.chapters.map((chapter, index) => {
+                        const active = Boolean(activeChapter && chapter.slug === activeChapter.slug);
+                        const done = completed.includes(chapter.slug);
+                        return (
+                          <li key={chapter.slug}>
+                            <Link
+                              className={`${active ? "active" : ""}${chapter.comingSoon ? " coming-soon" : ""}`}
+                              href={chapterHref(chapter.slug)}
+                              aria-current={active ? "page" : undefined}
+                              onClick={scheduleCloseOverlays}
+                            >
+                              <span className={`chapter-state ${done ? "done" : ""}`}>
+                                {done ? <Check size={12} /> : String(index + 1).padStart(2, "0")}
+                              </span>
+                              <span className="chapter-nav-title">
+                                {chapter.shortTitle}
+                                {chapter.comingSoon ? <em className="coming-soon-badge">即将</em> : null}
+                              </span>
+                            </Link>
+                          </li>
+                        );
+                      })}
+                    </ol>
+                  ) : null}
+                </div>
+              );
+            })
+          )}
         </nav>
 
         <div className="nav-progress">
@@ -365,26 +515,30 @@ export function CourseApp({
             aria-valuemax={100}
             aria-valuenow={progress}
           ><span style={{ transform: `scaleX(${progress / 100})` }} /></div>
-          <p>{completed.length} / {chapters.length} 章已完成</p>
+          <p>{completedInCurriculum.length} / {visibleChapters.length} 章已完成</p>
         </div>
 
         <div className="nav-actions">
-          <Link
-            className={`github-link ${skillsActive ? "active" : ""}`}
-            href="/skills"
-            aria-current={skillsActive ? "page" : undefined}
-            onClick={scheduleCloseOverlays}
-          >
-            <BookOpen size={17} />能力地图
-          </Link>
-          <Link
-            className={`github-link ${graduateActive ? "active" : ""}`}
-            href="/graduate"
-            aria-current={graduateActive ? "page" : undefined}
-            onClick={scheduleCloseOverlays}
-          >
-            <GraduationCap size={17} />毕业验收
-          </Link>
+          {showAgentExtras ? (
+            <>
+              <Link
+                className={`github-link ${skillsActive ? "active" : ""}`}
+                href="/skills"
+                aria-current={skillsActive ? "page" : undefined}
+                onClick={scheduleCloseOverlays}
+              >
+                <BookOpen size={17} />能力地图
+              </Link>
+              <Link
+                className={`github-link ${graduateActive ? "active" : ""}`}
+                href="/graduate"
+                aria-current={graduateActive ? "page" : undefined}
+                onClick={scheduleCloseOverlays}
+              >
+                <GraduationCap size={17} />毕业验收
+              </Link>
+            </>
+          ) : null}
           <Link
             className={`github-link ${resourcesActive ? "active" : ""}`}
             href="/resources"
@@ -473,7 +627,7 @@ export function CourseApp({
               </ul>
             </div>
           ) : null}
-          <div className="outline-note"><BookOpen size={18} /><p>先运行代码，再勾选自检。左侧按课程 / 实验 / 选修 / 作品集分组，进度只保存在当前浏览器。</p></div>
+          <div className="outline-note"><BookOpen size={18} /><p>先运行代码，再勾选自检。左侧可切换课程，并收起 / 展开课程、实验、选修与作品集；进度按当前课程统计，只保存在本浏览器。</p></div>
         </aside>
       ) : (
         <aside className="lesson-outline">
