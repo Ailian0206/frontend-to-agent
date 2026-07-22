@@ -8,6 +8,10 @@ import {
   supabaseDatabaseMigrationsChapter,
 } from "./supabase";
 import {
+  inngestEventsFunctionsRunsChapter,
+  inngestRetriesConcurrencyCostChapter,
+} from "./inngest";
+import {
   vercelCoreOperationsChapter,
   vercelReleaseObservabilityChapter,
 } from "./vercel";
@@ -19,4 +23,6 @@ export const productionOpsChapters: Omit<Chapter, "number">[] = [
   vercelReleaseObservabilityChapter,
   supabaseDatabaseMigrationsChapter,
   supabaseAuthRlsRecoveryChapter,
+  inngestEventsFunctionsRunsChapter,
+  inngestRetriesConcurrencyCostChapter,
 ];
