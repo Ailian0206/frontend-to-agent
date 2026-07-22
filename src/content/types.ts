@@ -15,6 +15,9 @@ export type ResourceKind = "github" | "docs" | "course" | "article" | "video";
 /** Content layer for sidebar grouping: lesson / lab / elective / capstone. */
 export type ContentKind = "lesson" | "lab" | "elective" | "capstone";
 
+/** Top-level course in the left-nav switcher (Agent vs production ops). */
+export type CurriculumId = "agent" | "production-ops";
+
 /** JD-aligned skill IDs from the curriculum skill map. */
 export type SkillId =
   | "S1"
@@ -86,6 +89,10 @@ export interface Chapter {
   tags: string[];
   /** Content layer used for left-nav grouping. */
   kind: ContentKind;
+  /**
+   * Top-level course ownership. Drafts may omit it; assembly defaults to `agent`.
+   */
+  curriculum?: CurriculumId;
   /** Linked entries from the skill map (S1–S11 / E1–E5). */
   skills: SkillId[];
   /** Lab chapter slugs that prove skills taught in this lesson. */
