@@ -25,7 +25,7 @@ import {
   useSyncExternalStore,
 } from "react";
 import {
-  groupChaptersByTrack,
+  groupChaptersByKind,
   type ChapterSearchItem,
   type ChapterSummary,
 } from "@/content/course-index";
@@ -124,7 +124,7 @@ export function CourseApp({
       : searchIndex;
   }, [query, searchIndex]);
   const progress = Math.round((completed.length / chapters.length) * 100);
-  const trackGroups = useMemo(() => groupChaptersByTrack(chapters), [chapters]);
+  const kindGroups = useMemo(() => groupChaptersByKind(chapters), [chapters]);
   const relatedResources = useMemo(
     () =>
       (activeChapter?.relatedResources ?? [])
@@ -133,6 +133,7 @@ export function CourseApp({
     [activeChapter?.relatedResources],
   );
   const resourcesActive = pathname.startsWith("/resources");
+  const skillsActive = pathname.startsWith("/skills");
 
   // Close overlays after the router has accepted navigation (do not sync-close in click handlers).
   function scheduleCloseOverlays(): void {
@@ -285,7 +286,9 @@ export function CourseApp({
           <span>
             {activeChapter
               ? `${String(activeChapter.number).padStart(2, "0")} / ${chapters.length}`
-              : "资源库"}
+              : skillsActive
+                ? "能力地图"
+                : "资源库"}
           </span>
         </div>
         <button className="icon-button" type="button" onClick={openSearch} aria-label="搜索课程" title="搜索课程">
@@ -314,10 +317,10 @@ export function CourseApp({
         </button>
 
         <nav aria-label="课程章节">
-          <p className="nav-label">按轨道浏览</p>
-          {trackGroups.map((group) => (
-            <div className="track-group" key={group.track}>
-              <p className="track-label" title={group.summary}>{group.track}</p>
+          <p className="nav-label">按内容形态浏览</p>
+          {kindGroups.map((group) => (
+            <div className="kind-group" key={group.kind}>
+              <p className="kind-label">{group.label}</p>
               <ol>
                 {group.chapters.map((chapter) => {
                   const active = Boolean(activeChapter && chapter.slug === activeChapter.slug);
@@ -325,7 +328,7 @@ export function CourseApp({
                   return (
                     <li key={chapter.slug}>
                       <Link
-                        className={active ? "active" : ""}
+                        className={`${active ? "active" : ""}${chapter.comingSoon ? " coming-soon" : ""}`}
                         href={chapterHref(chapter.slug)}
                         aria-current={active ? "page" : undefined}
                         onClick={scheduleCloseOverlays}
@@ -334,6 +337,7 @@ export function CourseApp({
                           {done ? <Check size={12} /> : String(chapter.number).padStart(2, "0")}
                         </span>
                         <span>{chapter.shortTitle}</span>
+                        {chapter.comingSoon ? <em className="coming-soon-badge">即将</em> : null}
                       </Link>
                     </li>
                   );
@@ -357,6 +361,14 @@ export function CourseApp({
         </div>
 
         <div className="nav-actions">
+          <Link
+            className={`github-link ${skillsActive ? "active" : ""}`}
+            href="/skills"
+            aria-current={skillsActive ? "page" : undefined}
+            onClick={scheduleCloseOverlays}
+          >
+            <BookOpen size={17} />能力地图
+          </Link>
           <Link
             className={`github-link ${resourcesActive ? "active" : ""}`}
             href="/resources"
@@ -445,13 +457,17 @@ export function CourseApp({
               </ul>
             </div>
           ) : null}
-          <div className="outline-note"><BookOpen size={18} /><p>先运行代码，再勾选自检。可用左侧轨道分类跳转，进度只保存在当前浏览器。</p></div>
+          <div className="outline-note"><BookOpen size={18} /><p>先运行代码，再勾选自检。左侧按课程 / 实验 / 选修 / 作品集分组，进度只保存在当前浏览器。</p></div>
         </aside>
       ) : (
         <aside className="lesson-outline">
           <div className="outline-note">
             <Library size={18} />
-            <p>这里是公开资源库。从左侧进入任意章节继续学习；资源链接在新标签页打开原文。</p>
+            <p>
+              {skillsActive
+                ? "这里是岗位能力地图。每条能力对应课程与 Lab；从左侧进入章节继续学习。"
+                : "这里是公开资源库。从左侧进入任意章节继续学习；资源链接在新标签页打开原文。"}
+            </p>
           </div>
         </aside>
       )}

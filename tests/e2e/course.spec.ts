@@ -82,3 +82,20 @@ test("search dialog traps and restores focus while locking background scroll", a
   await expect(page.locator("body")).not.toHaveCSS("overflow", "hidden");
   await expect(trigger).toBeFocused();
 });
+
+test("groups navigation by content kind", async ({ page }) => {
+  await page.goto("/");
+  const openMenu = page.getByRole("button", { name: "打开课程目录" });
+  if (await openMenu.isVisible()) await openMenu.click();
+  await expect(page.getByText("课程", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("实验", { exact: true }).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: /能力地图/ })).toBeVisible();
+});
+
+test("opens skills map", async ({ page }) => {
+  await page.goto("/skills/");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("能力地图");
+  await expect(page.getByText("S1", { exact: false }).first()).toBeVisible();
+  await expect(page.getByText("E1", { exact: false }).first()).toBeVisible();
+  await expect(page.getByRole("button", { name: "标记本章完成" })).toHaveCount(0);
+});
