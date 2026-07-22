@@ -11,3 +11,6 @@ output/
 .DS_Store
 .env*
 !.env.example
+
+# Isolated git worktrees
+.worktrees/
