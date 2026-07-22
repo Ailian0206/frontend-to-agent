@@ -25,6 +25,18 @@ describe("course content", () => {
     expect(new Set(skillMap.map((skill) => skill.id)).size).toBe(16);
   });
 
+  it("marks all assembled chapters with valid kind and skill ids", () => {
+    const ids = new Set(skillMap.map((skill) => skill.id));
+    const kinds = new Set(["lesson", "lab", "elective", "capstone"]);
+    for (const chapter of chapters) {
+      expect(kinds.has(chapter.kind), `${chapter.slug} has invalid kind`).toBe(true);
+      expect(chapter.skills.length).toBeGreaterThan(0);
+      for (const skill of chapter.skills) {
+        expect(ids.has(skill), `${chapter.slug} references unknown skill ${skill}`).toBe(true);
+      }
+    }
+  });
+
   it("contains the expanded 16-chapter curriculum in sequence", () => {
     expect(chapters).toHaveLength(16);
     expect(chapters.map((chapter) => chapter.number)).toEqual([

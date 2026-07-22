@@ -3,6 +3,8 @@ import type { Chapter } from "../types";
 /** Streaming UX and frontend state for agent products. */
 export const streamingUiChapter: Omit<Chapter, "number"> = {
   slug: "streaming-ui",
+  kind: "lesson",
+  skills: ["S4"],
   title: "流式交互与 Agent 前端状态",
   shortTitle: "流式 UI 与前端状态",
   phase: "把过程变成体验",

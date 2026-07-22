@@ -3,6 +3,8 @@ import type { Chapter } from "../types";
 /** Prompt engineering and structured output — missing core track in original curriculum. */
 export const promptStructuredChapter: Omit<Chapter, "number"> = {
   slug: "prompt-structured",
+  kind: "lesson",
+  skills: ["S1"],
   title: "Prompt 工程与结构化输出",
   shortTitle: "Prompt 与结构化输出",
   phase: "控制模型输出",
