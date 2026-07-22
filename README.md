@@ -23,14 +23,16 @@ GitHub Pages 部署完成后访问：
 ## 课程能力
 
 - 四层内容结构：课程 / 实验 Lab / 选修 / 作品集
+- 双课程目录：AI Agent 课程 + 14 课生产部署与运维专题
 - 岗位能力地图 `/skills`：主线 S1–S11 + 选修 E1–E5
-- 16 章系统教程（lesson）+ Lab/选修导航；**L01–L08 与选修 E1–E5 已交付**
+- 43 章系统内容（29 章 Agent + 14 课生产运维）+ Lab/选修导航；**L01–L08 与选修 E1–E5 已交付**
 - 16 周核心学习计划 + 选修拓展
 - Mermaid 架构图、结构化正文检索、章节深链分享
 - 20+ 组代码示例，核心实验均注明依赖版本、验证方法与章节自检
 - 公开资源库：GitHub / 官方文档 / 公开中文文章（原创摘要，外链阅读）
 - 桌面三栏学习工作台与移动端目录抽屉
 - `examples/knowledge-agent` 完整知识库 Agent 项目
+- 生产运维专题覆盖 Vercel、Supabase、Inngest、Sentry 的中文操作、截图、巡检和故障判断
 - `examples/lab-l01-structured-output` … `lab-l08-eval-guardrail`
 - 作品集：`examples/knowledge-agent`（HITL、离线评估≥30、护栏、演示路径）
 - 毕业验收页：`/graduate`

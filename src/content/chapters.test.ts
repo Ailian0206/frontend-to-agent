@@ -48,9 +48,9 @@ describe("course content", () => {
   });
 
   it("contains the expanded curriculum with labs and electives in sequence", () => {
-    expect(chapters).toHaveLength(39);
+    expect(chapters).toHaveLength(43);
     expect(chapters.map((chapter) => chapter.number)).toEqual(
-      Array.from({ length: 39 }, (_, index) => index + 1),
+      Array.from({ length: 43 }, (_, index) => index + 1),
     );
     expect(chapters.slice(0, 14).map((chapter) => chapter.slug)).toEqual([
       "why-agent",
@@ -91,7 +91,7 @@ describe("course content", () => {
 
   it("assigns agent curriculum by default and isolates production-ops", () => {
     expect(chapters.filter((chapter) => chapter.curriculum === "agent")).toHaveLength(29);
-    expect(chapters.filter((chapter) => chapter.curriculum === "production-ops")).toHaveLength(10);
+    expect(chapters.filter((chapter) => chapter.curriculum === "production-ops")).toHaveLength(14);
   });
 
   it("filters and groups chapters by curriculum for the dual-course sidebar", () => {
@@ -99,7 +99,7 @@ describe("course content", () => {
     const agentOnly = filterChaptersByCurriculum(chapterSummaries, "agent");
     const productionOnly = filterChaptersByCurriculum(chapterSummaries, "production-ops");
     expect(agentOnly).toHaveLength(29);
-    expect(productionOnly).toHaveLength(10);
+    expect(productionOnly).toHaveLength(14);
     expect(groupChaptersByKind(agentOnly).map((group) => group.label)).toEqual([
       "课程",
       "实验",
@@ -117,7 +117,7 @@ describe("course content", () => {
     expect(chapters.filter((chapter) => chapter.comingSoon)).toEqual([]);
   });
 
-  it("ships P01-P10 as ordered production-ops lessons", () => {
+  it("ships P01-P14 as ordered production-ops lessons", () => {
     const productionOps = chapters.filter((chapter) => chapter.curriculum === "production-ops");
 
     expect(productionOps.map((chapter) => chapter.slug)).toEqual([
@@ -131,6 +131,10 @@ describe("course content", () => {
       "inngest-retries-concurrency-cost",
       "sentry-issues-releases-sourcemaps",
       "sentry-traces-alerts-privacy",
+      "release-checks-rollback",
+      "cross-platform-incident-response",
+      "production-security-cost-recovery",
+      "observable-production-practicum",
     ]);
     expect(productionOps.every((chapter) => chapter.kind === "lesson")).toBe(true);
     expect(productionOps.every((chapter) => chapter.track === "工程上线")).toBe(true);
@@ -159,7 +163,7 @@ describe("course content", () => {
 
   it("ships complete platform lessons with screenshots and official resources", () => {
     const productionOps = chapters.filter((chapter) => chapter.curriculum === "production-ops");
-    const platformLessons = productionOps.slice(2);
+    const platformLessons = productionOps.slice(2, 10);
 
     expect(platformLessons.map((chapter) => chapter.slug)).toEqual([
       "vercel-core-operations",
@@ -186,6 +190,37 @@ describe("course content", () => {
       expect(blocks.some((block) => block.type === "resources")).toBe(true);
       expect(blocks.some((block) => block.type === "checkpoint")).toBe(true);
     }
+  });
+
+  it("ships P11-P14 with a cross-platform decision model", () => {
+    const productionOps = chapters.filter((chapter) => chapter.curriculum === "production-ops");
+    const operations = [
+      "release-checks-rollback",
+      "cross-platform-incident-response",
+      "production-security-cost-recovery",
+      "observable-production-practicum",
+    ];
+
+    for (const slug of operations) {
+      const chapter = productionOps.find((item) => item.slug === slug);
+      expect(chapter, slug).toBeDefined();
+      const blocks = chapter?.sections.flatMap((section) => section.blocks) ?? [];
+      const text = blocks.map(blockSearchText).join(" ");
+
+      expect(text).toMatch(/Vercel/);
+      expect(text).toMatch(/Supabase/);
+      expect(text).toMatch(/Inngest/);
+      expect(text).toMatch(/Sentry/);
+      expect(text).toMatch(/停止|不要继续/);
+      expect(blocks.some((block) => block.type === "checkpoint")).toBe(true);
+    }
+
+    const incident = productionOps.find((item) => item.slug === "cross-platform-incident-response");
+    const diagram = incident?.sections
+      .flatMap((section) => section.blocks)
+      .find((block) => block.type === "diagram");
+    expect(diagram).toBeDefined();
+    expect(blockSearchText(diagram!)).toMatch(/打不开|登录失败|数据异常|任务卡住|页面报错/);
   });
 
   it("assigns every chapter to a known learning track with tags", () => {

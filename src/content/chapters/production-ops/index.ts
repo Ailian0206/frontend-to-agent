@@ -16,6 +16,12 @@ import {
   sentryTracesAlertsPrivacyChapter,
 } from "./sentry";
 import {
+  crossPlatformIncidentResponseChapter,
+  observableProductionPracticumChapter,
+  productionSecurityCostRecoveryChapter,
+  releaseChecksRollbackChapter,
+} from "./operations";
+import {
   vercelCoreOperationsChapter,
   vercelReleaseObservabilityChapter,
 } from "./vercel";
@@ -31,4 +37,8 @@ export const productionOpsChapters: Omit<Chapter, "number">[] = [
   inngestRetriesConcurrencyCostChapter,
   sentryIssuesReleasesSourcemapsChapter,
   sentryTracesAlertsPrivacyChapter,
+  releaseChecksRollbackChapter,
+  crossPlatformIncidentResponseChapter,
+  productionSecurityCostRecoveryChapter,
+  observableProductionPracticumChapter,
 ];
