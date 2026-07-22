@@ -95,7 +95,8 @@ test("groups navigation by content kind", async ({ page }) => {
 test("opens skills map", async ({ page }) => {
   await page.goto("/skills/");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("能力地图");
-  await expect(page.getByText("S1", { exact: false }).first()).toBeVisible();
-  await expect(page.getByText("E1", { exact: false }).first()).toBeVisible();
+  const main = page.locator("main");
+  await expect(main.getByRole("heading", { name: /S1/ }).first()).toBeVisible();
+  await expect(main.getByRole("heading", { name: /E1/ }).first()).toBeVisible();
   await expect(page.getByRole("button", { name: "标记本章完成" })).toHaveCount(0);
 });
