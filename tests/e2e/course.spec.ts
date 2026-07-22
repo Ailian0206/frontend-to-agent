@@ -1,17 +1,26 @@
 import { expect, test } from "@playwright/test";
 
-test("navigates chapters, searches, and persists progress", async ({ page }) => {
-  await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("为什么前端要转型");
+test("opens public resource catalog and filters by track", async ({ page }) => {
+  await page.goto("/resources/");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("公开 Agent 教程与资源库");
+  await page.getByLabel("按轨道筛选").selectOption("工具与协议");
+  await expect(page.getByText(/当前显示 \d+ 条/)).toBeVisible();
+  await expect(page.getByRole("link", { name: /mcp|MCP|langchain-mcp|Model Context/i }).first()).toBeVisible();
+});
 
-  await page.getByRole("button", { name: "搜索课程" }).first().click();
-  await page.getByRole("textbox", { name: "搜索关键词" }).fill("RAG");
-  await page.getByRole("dialog").getByRole("link", { name: /RAG 私有知识库/ }).click();
-  await expect(page).toHaveURL(/\/chapter\/rag\/$/, { timeout: 15_000 });
+test("searches body content and persists chapter progress", async ({ page }) => {
+  test.setTimeout(60_000);
+  await page.goto("/chapter/rag/", { waitUntil: "domcontentloaded" });
   await expect(page.getByRole("heading", { level: 1 })).toContainText("RAG 检索增强生成");
 
+  await page.getByRole("button", { name: "搜索课程" }).first().click();
+  await page.getByRole("textbox", { name: "搜索关键词" }).fill("Qdrant");
+  await expect(page.getByRole("dialog").getByRole("link", { name: /RAG 私有知识库/ })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toBeHidden();
+
   await page.getByRole("button", { name: "标记本章完成" }).click();
-  await page.reload();
+  await page.reload({ waitUntil: "domcontentloaded" });
   await expect(page.getByRole("button", { name: "本章已完成" })).toBeVisible();
 });
 

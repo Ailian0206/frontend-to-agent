@@ -109,6 +109,23 @@ export function ContentRenderer({ blocks }: ContentRendererProps) {
             <ul>{block.criteria.map((criterion) => <li key={criterion}>{criterion}</li>)}</ul>
           </aside>
         );
+      case "resources":
+        return (
+          <section className="resource-list" key={key} aria-label={block.title}>
+            <h3>{block.title}</h3>
+            <ul>
+              {block.items.map((item) => (
+                <li key={item.url}>
+                  <a href={item.url} target="_blank" rel="noreferrer">
+                    <span className="resource-kind">{item.kind}</span>
+                    <strong>{item.title}</strong>
+                  </a>
+                  <p>{item.note}</p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        );
     }
   });
 }

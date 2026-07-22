@@ -19,6 +19,7 @@ export function CoursePage({ chapter }: { chapter: Chapter }) {
       <article>
         <header className="lesson-header">
           <div className="lesson-kicker">
+            <span>{chapter.track}</span>
             <span>{chapter.phase}</span>
             <span>{chapter.level}</span>
             <span><Clock3 size={14} />{chapter.duration}</span>
@@ -26,6 +27,9 @@ export function CoursePage({ chapter }: { chapter: Chapter }) {
           <p className="chapter-number">CHAPTER {String(chapter.number).padStart(2, "0")}</p>
           <h1>{chapter.title}</h1>
           <p className="lesson-goal">{chapter.goal}</p>
+          <div className="tag-row" aria-label="本章标签">
+            {chapter.tags.map((tag) => <code key={tag}>{tag}</code>)}
+          </div>
           {chapter.dependencies ? (
             <div className="dependency-row" aria-label="本章依赖">
               <span>依赖版本</span>

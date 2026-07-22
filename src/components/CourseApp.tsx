@@ -7,11 +7,14 @@ import {
   Check,
   CheckCircle2,
   CodeXml,
+  Library,
+  Link2,
   Menu,
   Search,
   X,
 } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   type ReactNode,
   useEffect,
@@ -20,11 +23,16 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import type { ChapterSearchItem, ChapterSummary } from "@/content/course-index";
+import {
+  groupChaptersByTrack,
+  type ChapterSearchItem,
+  type ChapterSummary,
+} from "@/content/course-index";
 
 const progressKey = "frontend-to-agent:completed";
 const progressEvent = "frontend-to-agent:progress";
 const mobileQuery = "(max-width: 760px)";
+const siteOrigin = "https://ailian0206.github.io/frontend-to-agent";
 
 function parseStoredProgress(value: string): string[] {
   try {
@@ -77,11 +85,13 @@ export function CourseApp({
 }: CourseAppProps) {
   const progressSnapshot = useSyncExternalStore(subscribeToProgress, getProgressSnapshot, () => "[]");
   const isMobile = useSyncExternalStore(subscribeToMobile, getMobileSnapshot, () => false);
+  const pathname = usePathname();
   const completed = useMemo(() => parseStoredProgress(progressSnapshot), [progressSnapshot]);
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [activeSection, setActiveSection] = useState(activeChapter.sections[0]?.id ?? "");
+  const [copied, setCopied] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchDialogRef = useRef<HTMLDivElement>(null);
   const searchReturnFocusRef = useRef<HTMLElement | null>(null);
@@ -98,6 +108,25 @@ export function CourseApp({
       : searchIndex;
   }, [query, searchIndex]);
   const progress = Math.round((completed.length / chapters.length) * 100);
+  const trackGroups = useMemo(() => groupChaptersByTrack(chapters), [chapters]);
+
+  // Close overlays after route changes so Link navigation is not interrupted mid-click.
+  useEffect(() => {
+    setSearchOpen(false);
+    setMobileNavOpen(false);
+    setQuery("");
+  }, [pathname]);
+
+  async function copyChapterLink(): Promise<void> {
+    const url = `${siteOrigin}/chapter/${activeChapter.slug}/`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    } catch {
+      setCopied(false);
+    }
+  }
 
   useEffect(() => {
     const sections = activeChapter.sections
@@ -221,7 +250,7 @@ export function CourseApp({
         ><Menu size={19} /></button>
         <div className="mobile-brand">
           <strong>Frontend → Agent</strong>
-          <span>{String(activeChapter.number).padStart(2, "0")} / 11</span>
+          <span>{String(activeChapter.number).padStart(2, "0")} / {chapters.length}</span>
         </div>
         <button className="icon-button" type="button" onClick={openSearch} aria-label="搜索课程" title="搜索课程">
           <Search size={18} />
@@ -249,27 +278,32 @@ export function CourseApp({
         </button>
 
         <nav aria-label="课程章节">
-          <p className="nav-label">课程目录</p>
-          <ol>
-            {chapters.map((chapter) => {
-              const active = chapter.slug === activeChapter.slug;
-              const done = completed.includes(chapter.slug);
-              return (
-                <li key={chapter.slug}>
-                  <Link
-                    className={active ? "active" : ""}
-                    href={chapterHref(chapter.slug)}
-                    aria-current={active ? "page" : undefined}
-                  >
-                    <span className={`chapter-state ${done ? "done" : ""}`}>
-                      {done ? <Check size={12} /> : String(chapter.number).padStart(2, "0")}
-                    </span>
-                    <span>{chapter.shortTitle}</span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ol>
+          <p className="nav-label">按轨道浏览</p>
+          {trackGroups.map((group) => (
+            <div className="track-group" key={group.track}>
+              <p className="track-label" title={group.summary}>{group.track}</p>
+              <ol>
+                {group.chapters.map((chapter) => {
+                  const active = chapter.slug === activeChapter.slug;
+                  const done = completed.includes(chapter.slug);
+                  return (
+                    <li key={chapter.slug}>
+                      <Link
+                        className={active ? "active" : ""}
+                        href={chapterHref(chapter.slug)}
+                        aria-current={active ? "page" : undefined}
+                      >
+                        <span className={`chapter-state ${done ? "done" : ""}`}>
+                          {done ? <Check size={12} /> : String(chapter.number).padStart(2, "0")}
+                        </span>
+                        <span>{chapter.shortTitle}</span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+          ))}
         </nav>
 
         <div className="nav-progress">
@@ -285,9 +319,14 @@ export function CourseApp({
           <p>{completed.length} / {chapters.length} 章已完成</p>
         </div>
 
-        <a className="github-link" href="https://github.com/Ailian0206/frontend-to-agent" target="_blank" rel="noreferrer">
-          <CodeXml size={17} />查看源码与完整示例
-        </a>
+        <div className="nav-actions">
+          <Link className="github-link" href="/resources">
+            <Library size={17} />公开资源库
+          </Link>
+          <a className="github-link" href="https://github.com/Ailian0206/frontend-to-agent" target="_blank" rel="noreferrer">
+            <CodeXml size={17} />查看源码与完整示例
+          </a>
+        </div>
       </aside>
 
       {mobileNavOpen ? <button type="button" className="drawer-backdrop" onClick={closeMobileNav} aria-label="关闭课程目录" /> : null}
@@ -295,11 +334,16 @@ export function CourseApp({
       <main className="lesson-main">
         {children}
         <footer className="lesson-footer">
-          <button
-            type="button"
-            className={`complete-button ${completed.includes(activeChapter.slug) ? "completed" : ""}`}
-            onClick={toggleComplete}
-          ><CheckCircle2 size={19} />{completed.includes(activeChapter.slug) ? "本章已完成" : "标记本章完成"}</button>
+          <div className="footer-actions">
+            <button
+              type="button"
+              className={`complete-button ${completed.includes(activeChapter.slug) ? "completed" : ""}`}
+              onClick={toggleComplete}
+            ><CheckCircle2 size={19} />{completed.includes(activeChapter.slug) ? "本章已完成" : "标记本章完成"}</button>
+            <button type="button" className="share-button" onClick={copyChapterLink}>
+              <Link2 size={17} />{copied ? "链接已复制" : "复制本章链接"}
+            </button>
+          </div>
           <div className="chapter-pagination">
             {previousChapter ? <Link href={chapterHref(previousChapter.slug)}><ArrowLeft size={17} />上一章</Link> : <span aria-hidden="true" />}
             {nextChapter ? <Link href={chapterHref(nextChapter.slug)}>下一章<ArrowRight size={17} /></Link> : <span aria-hidden="true" />}
@@ -322,10 +366,18 @@ export function CourseApp({
           </nav>
         </div>
         <div className="term-index">
+          <p className="outline-label">学习轨道</p>
+          <div><code>{activeChapter.track}</code></div>
+        </div>
+        <div className="term-index">
+          <p className="outline-label">标签</p>
+          <div>{activeChapter.tags.map((tag) => <code key={tag}>{tag}</code>)}</div>
+        </div>
+        <div className="term-index">
           <p className="outline-label">关键术语</p>
           <div>{activeChapter.terms.map((term) => <code key={term}>{term}</code>)}</div>
         </div>
-        <div className="outline-note"><BookOpen size={18} /><p>先运行代码，再勾选自检。课程进度只保存在当前浏览器。</p></div>
+        <div className="outline-note"><BookOpen size={18} /><p>先运行代码，再勾选自检。可用左侧轨道分类跳转，进度只保存在当前浏览器。</p></div>
       </aside>
 
       {searchOpen ? (
@@ -340,14 +392,17 @@ export function CourseApp({
           >
             <div className="search-input-row">
               <Search size={20} />
-              <input ref={searchInputRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索 RAG、Tool Calling、部署……" aria-label="搜索关键词" />
+              <input ref={searchInputRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索正文、代码、MCP、HITL……" aria-label="搜索关键词" />
               <button type="button" onClick={() => setSearchOpen(false)} aria-label="关闭搜索"><X size={18} /></button>
             </div>
             <div className="search-results">
               {results.length ? results.map((chapter) => (
                 <Link href={chapterHref(chapter.slug)} key={chapter.slug}>
                   <span>{String(chapter.number).padStart(2, "0")}</span>
-                  <div><strong>{chapter.shortTitle}</strong><p>{chapter.goal}</p></div>
+                  <div>
+                    <strong>{chapter.shortTitle}</strong>
+                    <p>{chapter.track} · {chapter.goal}</p>
+                  </div>
                   <ArrowRight size={17} />
                 </Link>
               )) : (

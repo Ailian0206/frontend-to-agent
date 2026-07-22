@@ -1,6 +1,6 @@
 # Frontend to Agent
 
-面向 10 年以上前端工程师的 AI Agent 系统学习网站。课程以 Node.js、TypeScript、LangChain.js 和 LangGraph.js 为主线，从核心概念、Tool Calling、RAG、记忆与多 Agent，一直推进到可部署的个人知识库 Agent。
+面向 10 年以上前端工程师的 AI Agent 系统学习网站。课程以 Node.js、TypeScript、LangChain.js 和 LangGraph.js 为主线，覆盖 Prompt、Tool Calling、流式 UI、RAG、HITL、多 Agent、MCP、评估安全，直到可部署的个人知识库 Agent。
 
 ## 在线课程
 
@@ -8,14 +8,31 @@ GitHub Pages 部署完成后访问：
 
 <https://ailian0206.github.io/frontend-to-agent/>
 
+公开资源库：
+
+<https://ailian0206.github.io/frontend-to-agent/resources/>
+
 ## 课程能力
 
-- 11 章系统教程与 12 周核心学习计划
-- 6 张 Mermaid 架构图
-- 20 组代码示例，核心实验均注明依赖版本、验证方法与章节自检
-- 章节搜索、学习进度持久化、代码一键复制
+- 16 章系统教程，按 7 大学习轨道分类浏览
+- 16 周核心学习计划 + 选修拓展
+- Mermaid 架构图、结构化正文检索、章节深链分享
+- 20+ 组代码示例，核心实验均注明依赖版本、验证方法与章节自检
+- 公开资源库：GitHub / 官方文档 / 公开中文文章（原创摘要，外链阅读）
 - 桌面三栏学习工作台与移动端目录抽屉
 - `examples/knowledge-agent` 完整知识库 Agent 项目
+
+## 学习轨道
+
+| 轨道 | 覆盖 |
+|---|---|
+| 认知基础 | 转型动机、术语、系统边界 |
+| 模型与提示 | 环境、Prompt、结构化输出 |
+| 工具与协议 | Tool Calling、MCP |
+| 知识检索 | RAG、Agentic RAG、引用与评估 |
+| 状态编排 | 记忆、HITL、多 Agent |
+| 工程上线 | 流式 UI、部署、评估与安全 |
+| 实战进阶 | Capstone、16 周路线、资源库 |
 
 ## 本地运行
 
