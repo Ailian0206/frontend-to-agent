@@ -68,6 +68,14 @@ export function blockSearchText(block: Chapter["sections"][number]["blocks"][num
       return `${block.title} ${block.criteria.join(" ")}`;
     case "resources":
       return `${block.title} ${block.items.map((item) => `${item.title} ${item.note} ${item.url}`).join(" ")}`;
+    case "screenshot":
+      return [
+        block.title,
+        block.alt,
+        block.capturedAt,
+        ...block.legend.map((item) => `${item.label} ${item.title} ${item.detail}`),
+        block.sourceUrl ?? "",
+      ].join(" ");
     default:
       return "";
   }

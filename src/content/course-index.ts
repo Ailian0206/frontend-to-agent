@@ -1,6 +1,13 @@
 import { chapters, blockSearchText } from "./chapters";
-import { courseTracks } from "./taxonomy";
-import type { Chapter, ContentKind, CourseTrack, SkillId } from "./types";
+import { chapterSeries, courseTracks } from "./taxonomy";
+import type {
+  Chapter,
+  ChapterSeriesId,
+  ChapterSeriesRef,
+  ContentKind,
+  CourseTrack,
+  SkillId,
+} from "./types";
 
 export interface ChapterSummary {
   slug: string;
@@ -11,6 +18,7 @@ export interface ChapterSummary {
   track: CourseTrack;
   tags: string[];
   kind: ContentKind;
+  series?: ChapterSeriesRef;
   skills: SkillId[];
   comingSoon?: boolean;
   relatedLabs: string[];
@@ -36,6 +44,7 @@ export function summarizeChapter(chapter: Chapter): ChapterSummary {
     track: chapter.track,
     tags: chapter.tags,
     kind: chapter.kind,
+    series: chapter.series,
     skills: chapter.skills,
     comingSoon: chapter.comingSoon,
     relatedLabs: chapter.relatedLabs ?? [],
@@ -108,16 +117,42 @@ export interface KindChapterGroup {
   kind: ContentKind;
   label: ContentKindLabel;
   chapters: ChapterSummary[];
+  subgroups?: ChapterSubgroup[];
+}
+
+export interface ChapterSubgroup {
+  id: "core-lessons" | ChapterSeriesId;
+  label: string;
+  chapters: ChapterSummary[];
 }
 
 /** Group chapters by content kind for the primary left-nav IA. */
 export function groupChaptersByKind(items: ChapterSummary[] = chapterSummaries): KindChapterGroup[] {
   const order: ContentKind[] = ["lesson", "lab", "elective", "capstone"];
   return order
-    .map((kind) => ({
-      kind,
-      label: kindLabel(kind),
-      chapters: items.filter((chapter) => chapter.kind === kind),
-    }))
+    .map((kind): KindChapterGroup => {
+      const chapters = items.filter((chapter) => chapter.kind === kind);
+      if (kind !== "lesson") return { kind, label: kindLabel(kind), chapters };
+
+      const coreLessons = chapters.filter((chapter) => !chapter.series);
+      const seriesSubgroups: ChapterSubgroup[] = chapterSeries.map((series) => ({
+        id: series.id,
+        label: series.label,
+        chapters: chapters
+          .filter((chapter) => chapter.series?.id === series.id)
+          .sort((left, right) => (left.series?.order ?? 0) - (right.series?.order ?? 0)),
+      }));
+      const subgroups: ChapterSubgroup[] = [];
+      if (coreLessons.length > 0) {
+        subgroups.push({
+          id: "core-lessons",
+          label: "Agent 工程主线",
+          chapters: coreLessons,
+        });
+      }
+      subgroups.push(...seriesSubgroups.filter((group) => group.chapters.length > 0));
+
+      return { kind, label: kindLabel(kind), chapters, subgroups };
+    })
     .filter((group) => group.chapters.length > 0);
 }

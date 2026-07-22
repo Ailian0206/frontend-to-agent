@@ -52,7 +52,7 @@
 - Modify: `src/content/chapters/index.ts`
 - Modify: `src/content/chapters.test.ts`
 
-- [ ] **Step 1: 先写专题分组和截图搜索 RED 测试**
+- [x] **Step 1: 先写专题分组和截图搜索 RED 测试**
 
 在 `src/content/chapters.test.ts` 增加最小合成章节，断言专题元数据进入摘要、导航组和搜索文本：
 
@@ -92,13 +92,13 @@ it("indexes screenshot title, alt text, legend, and source", () => {
 });
 ```
 
-- [ ] **Step 2: 运行聚焦测试确认 RED**
+- [x] **Step 2: 运行聚焦测试确认 RED**
 
 Run: `PATH=$HOME/.nvm/versions/node/v22.22.1/bin:$PATH npm test -- src/content/chapters.test.ts`
 
 Expected: TypeScript/Vitest 因 `series`、`screenshot` 和 `subgroups` 尚不存在而失败。
 
-- [ ] **Step 3: 实现最小类型和专题目录**
+- [x] **Step 3: 实现最小类型和专题目录**
 
 在 `src/content/types.ts` 增加：
 
@@ -147,7 +147,7 @@ export const chapterSeries = [
 ];
 ```
 
-- [ ] **Step 4: 让摘要、二级分组和搜索消费新契约**
+- [x] **Step 4: 让摘要、二级分组和搜索消费新契约**
 
 `ChapterSummary` 增加 `series?: ChapterSeriesRef`；`summarizeChapter` 原样传递。`KindChapterGroup` 增加以下可选结构：
 
@@ -168,7 +168,7 @@ export interface KindChapterGroup {
 
 lesson 分组先输出无 `series` 的“Agent 工程主线”，再按 `chapterSeries` 输出专题，并按 `series.order` 排序；lab/elective/capstone 保持原结构。`blockSearchText` 的新分支返回标题、替代文字、日期、图例和来源链接拼接文本。
 
-- [ ] **Step 5: 验证 GREEN 并提交**
+- [x] **Step 5: 验证 GREEN 并提交**
 
 Run: `PATH=$HOME/.nvm/versions/node/v22.22.1/bin:$PATH npm test -- src/content/chapters.test.ts`
 

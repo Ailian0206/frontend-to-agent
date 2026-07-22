@@ -1,9 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { chapters, searchChapters, blockSearchText } from "./chapters";
-import { groupChaptersByTrack } from "./course-index";
+import {
+  groupChaptersByKind,
+  groupChaptersByTrack,
+  summarizeChapter,
+} from "./course-index";
 import { courseResources } from "./resources";
 import { coreSkillIds, electiveSkillIds, skillMap } from "./skills";
 import { courseTracks } from "./taxonomy";
+import type { Chapter, ContentBlock } from "./types";
 
 describe("course content", () => {
   it("defines core skills S1–S11 and elective skills E1–E5", () => {
@@ -124,6 +129,41 @@ describe("course content", () => {
     expect(searchChapters("ORDER_GATEWAY_TIMEOUT").map((chapter) => chapter.slug)).toContain("tool-calling");
     expect(searchChapters("AbortSignal").map((chapter) => chapter.slug)).toContain("streaming-ui");
     expect(searchChapters("MultiServerMCPClient").map((chapter) => chapter.slug)).toContain("mcp-protocol");
+  });
+
+  it("carries production topic metadata into summaries and navigation", () => {
+    const chapter = {
+      ...chapters[0],
+      slug: "production-test",
+      series: { id: "production-ops", order: 1 },
+    } satisfies Chapter;
+
+    expect(summarizeChapter(chapter).series).toEqual({ id: "production-ops", order: 1 });
+    const lessonGroup = groupChaptersByKind([summarizeChapter(chapter)])[0];
+    expect(lessonGroup.subgroups?.[0]).toMatchObject({
+      id: "production-ops",
+      label: "生产部署与运维",
+    });
+  });
+
+  it("indexes screenshot title, alt text, legend, and source", () => {
+    const screenshot = {
+      type: "screenshot",
+      src: "/course/production-ops/vercel/deployments.webp",
+      alt: "Vercel Deployments 页面，标出状态和提交版本",
+      title: "从 Deployments 确认线上版本",
+      capturedAt: "2026-07-22",
+      imageKind: "real",
+      width: 1440,
+      height: 900,
+      legend: [
+        { label: "1", title: "Status（状态）", detail: "Ready 表示发布完成。" },
+      ],
+      sourceUrl: "https://vercel.com/docs/deployments",
+    } satisfies ContentBlock;
+
+    expect(blockSearchText(screenshot)).toContain("Status（状态） Ready");
+    expect(blockSearchText(screenshot)).toContain("Vercel Deployments");
   });
 
   it("bootstraps an explicit NodeNext ESM project before top-level await lessons", () => {
