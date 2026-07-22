@@ -34,7 +34,7 @@ Open `http://localhost:3000` or use the API examples in [`scripts/demo-paths.md`
 2. [ ] 成功问答带 `[source: filename]` 引用（见 `scripts/demo-paths.md` 路径 1）  
 3. [ ] 无证据问题拒答、不编造（路径 2 + `no_evidence` 评估用例）  
 4. [ ] 注入/投毒短语被 `checkAnswer` 拦截（路径 3 + `knowledge/injection-poison-sample.md`）  
-5. [ ] 不同 `threadId` 不互泄上下文（路径 4）  
+5. [ ] 不同 `threadId` 不互泄上下文：离线评估用 `assertThreadIsolation` 拦截外会话密钥回显（路径 4）  
 6. [ ] HITL：`proposeNotify` → `confirm` 后才 mock 发送（`npm test` / HITL curl）  
 7. [ ] 离线评估 ≥30 用例全绿：`npm test`  
 8. [ ] `npm run check`（`tsc` + 测试）通过  

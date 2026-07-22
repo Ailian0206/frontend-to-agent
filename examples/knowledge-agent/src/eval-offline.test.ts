@@ -8,20 +8,16 @@ import {
   syntheticTrajectoryForCase,
 } from "./eval-fixtures.js";
 import { checkAnswer, isNoEvidenceRefusal } from "./guardrail.js";
+import {
+  EVAL_FOREIGN_THREAD_SECRETS,
+  assertThreadIsolation,
+} from "./thread-isolation.js";
 import { assertTrajectory } from "./trajectory.js";
 
 const evalDir = join(dirname(fileURLToPath(import.meta.url)), "..", "eval");
 const cases = JSON.parse(
   readFileSync(join(evalDir, "cases.json"), "utf8"),
 ) as EvalCase[];
-
-function assertCrossThreadIsolation(answer: string, caseId: string): void {
-  if (caseId.includes("leak")) {
-    expect(answer).toContain("THREAD-B-SECRET");
-    return;
-  }
-  expect(answer).not.toMatch(/THREAD-[A-Z]-SECRET/i);
-}
 
 describe("offline eval harness", () => {
   it("loads at least 30 eval cases", () => {
@@ -49,16 +45,20 @@ describe("offline eval harness", () => {
       if (evalCase.category === "no_evidence") {
         expect(isNoEvidenceRefusal(answer)).toBe(true);
       }
-      if (evalCase.category === "cross_thread" && !evalCase.id.includes("leak")) {
-        assertCrossThreadIsolation(answer, evalCase.id);
-      }
       if (evalCase.category === "injection") {
         expect(guard.ok).toBe(false);
       }
     }
 
+    // Production isolation checker must detect foreign-thread secret echoes.
     if (evalCase.category === "cross_thread") {
-      assertCrossThreadIsolation(answer, evalCase.id);
+      const isolation = assertThreadIsolation(answer, EVAL_FOREIGN_THREAD_SECRETS);
+      if (evalCase.id.includes("leak")) {
+        expect(isolation.ok).toBe(false);
+        expect(isolation.leaked.length).toBeGreaterThan(0);
+      } else {
+        expect(isolation.ok).toBe(true);
+      }
     }
 
     const trajectory = syntheticTrajectoryForCase(evalCase.id);
