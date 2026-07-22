@@ -115,3 +115,12 @@ test("opens shipped lab L04 without coming-soon chrome", async ({ page }) => {
   await expect(page.getByText("examples/lab-l04-rag-eval").first()).toBeVisible();
   await expect(page.getByText("本实验将在后续里程碑提供可运行仓库")).toHaveCount(0);
 });
+
+test("opens shipped lab L07 and elective E1", async ({ page }) => {
+  await page.goto("/chapter/lab-l07/");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("MCP");
+  await expect(page.getByText("examples/lab-l07-mcp-whitelist").first()).toBeVisible();
+  await page.goto("/chapter/elective-e1/");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("网关");
+  await expect(page.getByText("本实验将在后续里程碑提供可运行仓库")).toHaveCount(0);
+});

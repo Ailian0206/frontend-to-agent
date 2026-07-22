@@ -20,16 +20,16 @@ GitHub Pages 部署完成后访问：
 
 - 四层内容结构：课程 / 实验 Lab / 选修 / 作品集
 - 岗位能力地图 `/skills`：主线 S1–S11 + 选修 E1–E5
-- 16 章系统教程（lesson）+ Lab/选修导航；**L01–L06 已交付可运行子包**
+- 16 章系统教程（lesson）+ Lab/选修导航；**L01–L08 与选修 E1–E5 已交付**
 - 16 周核心学习计划 + 选修拓展
 - Mermaid 架构图、结构化正文检索、章节深链分享
 - 20+ 组代码示例，核心实验均注明依赖版本、验证方法与章节自检
 - 公开资源库：GitHub / 官方文档 / 公开中文文章（原创摘要，外链阅读）
 - 桌面三栏学习工作台与移动端目录抽屉
 - `examples/knowledge-agent` 完整知识库 Agent 项目
-- `examples/lab-l01-structured-output` … `lab-l06-supervisor`
+- `examples/lab-l01-structured-output` … `lab-l08-eval-guardrail`
 
-## Labs（M2–M3）
+## Labs（M2–M4）
 
 | Lab | 能力 | 目录 |
 |---|---|---|
@@ -39,8 +39,10 @@ GitHub Pages 部署完成后访问：
 | L04 | S5 | `examples/lab-l04-rag-eval` |
 | L05 | S6/S7 | `examples/lab-l05-checkpoint-hitl` |
 | L06 | S8 | `examples/lab-l06-supervisor` |
+| L07 | S9 | `examples/lab-l07-mcp-whitelist` |
+| L08 | S10/S11 | `examples/lab-l08-eval-guardrail` |
 
-每个 Lab：`cd` 进入目录后 `npm install && npm test`。CI 通过根目录 `npm run test:examples` 串联，**不会**调用付费模型。
+每个 Lab：`cd` 进入目录后 `npm install && npm test`。CI 通过根目录 `npm run test:examples` 串联，**不会**调用付费模型。选修 E1–E5 见侧栏「选修」分组。
 
 ## 学习轨道
 
