@@ -1,6 +1,7 @@
 import { chapters, blockSearchText } from "./chapters";
+import { resolveCurriculumId } from "./curricula";
 import { courseTracks } from "./taxonomy";
-import type { Chapter, ContentKind, CourseTrack, SkillId } from "./types";
+import type { Chapter, ContentKind, CourseTrack, CurriculumId, SkillId } from "./types";
 
 export interface ChapterSummary {
   slug: string;
@@ -11,6 +12,7 @@ export interface ChapterSummary {
   track: CourseTrack;
   tags: string[];
   kind: ContentKind;
+  curriculum: CurriculumId;
   skills: SkillId[];
   comingSoon?: boolean;
   relatedLabs: string[];
@@ -36,6 +38,7 @@ export function summarizeChapter(chapter: Chapter): ChapterSummary {
     track: chapter.track,
     tags: chapter.tags,
     kind: chapter.kind,
+    curriculum: resolveCurriculumId(chapter.curriculum),
     skills: chapter.skills,
     comingSoon: chapter.comingSoon,
     relatedLabs: chapter.relatedLabs ?? [],
@@ -59,6 +62,7 @@ export const chapterSearchIndex: ChapterSearchItem[] = chapters.map((chapter) =>
     chapter.phase,
     chapter.track,
     chapter.kind,
+    resolveCurriculumId(chapter.curriculum),
     ...chapter.skills,
     ...chapter.tags,
     ...chapter.terms,
@@ -108,6 +112,14 @@ export interface KindChapterGroup {
   kind: ContentKind;
   label: ContentKindLabel;
   chapters: ChapterSummary[];
+}
+
+/** Keep only chapters that belong to the selected top-level course. */
+export function filterChaptersByCurriculum<T extends { curriculum: CurriculumId }>(
+  items: T[],
+  curriculum: CurriculumId,
+): T[] {
+  return items.filter((item) => item.curriculum === curriculum);
 }
 
 /** Group chapters by content kind for the primary left-nav IA. */

@@ -1,15 +1,17 @@
 import { baseChapters } from "../chapters.base";
+import { resolveCurriculumId } from "../curricula";
 import { electivePlaceholders, labPlaceholders } from "../placeholders";
 import type { Chapter } from "../types";
 import { evalSecurityChapter } from "./eval-security";
 import { hitlChapter } from "./human-in-the-loop";
 import { mcpChapter } from "./mcp-protocol";
+import { productionOpsIntroChapter } from "./production-ops-stub";
 import { promptStructuredChapter } from "./prompt-structured";
 import { streamingUiChapter } from "./streaming-ui";
 
 /**
- * Assemble curriculum layers: lessons → labs → electives → capstone → roadmap.
- * Lab/elective entries are navigation stubs until later milestones.
+ * Assemble curriculum layers: lessons → labs → electives → capstone → roadmap,
+ * then production-ops stubs (separate top-level course).
  */
 const lessonChapters: Omit<Chapter, "number">[] = [
   baseChapters[0], // why-agent
@@ -34,10 +36,13 @@ const orderedWithoutNumbers: Omit<Chapter, "number">[] = [
   ...electivePlaceholders,
   baseChapters[9], // capstone
   baseChapters[10], // roadmap
+  productionOpsIntroChapter,
 ];
 
 export const chapters: Chapter[] = orderedWithoutNumbers.map((chapter, index) => ({
   ...chapter,
+  // Existing corpus belongs to the Agent course until production chapters land.
+  curriculum: resolveCurriculumId(chapter.curriculum),
   number: index + 1,
 }));
 

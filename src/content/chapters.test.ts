@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { chapters, searchChapters, blockSearchText } from "./chapters";
-import { groupChaptersByTrack } from "./course-index";
+import {
+  filterChaptersByCurriculum,
+  groupChaptersByKind,
+  groupChaptersByTrack,
+  chapterSummaries,
+} from "./course-index";
+import { curricula } from "./curricula";
 import { courseResources } from "./resources";
 import { coreSkillIds, electiveSkillIds, skillMap } from "./skills";
 import { courseTracks } from "./taxonomy";
@@ -31,7 +37,10 @@ describe("course content", () => {
     const kinds = new Set(["lesson", "lab", "elective", "capstone"]);
     for (const chapter of chapters) {
       expect(kinds.has(chapter.kind), `${chapter.slug} has invalid kind`).toBe(true);
-      expect(chapter.skills.length).toBeGreaterThan(0);
+      // Production-ops stubs may ship without Agent skill ids until that course is authored.
+      if (chapter.curriculum === "agent") {
+        expect(chapter.skills.length).toBeGreaterThan(0);
+      }
       for (const skill of chapter.skills) {
         expect(ids.has(skill), `${chapter.slug} references unknown skill ${skill}`).toBe(true);
       }
@@ -39,9 +48,9 @@ describe("course content", () => {
   });
 
   it("contains the expanded curriculum with labs and electives in sequence", () => {
-    expect(chapters).toHaveLength(29);
+    expect(chapters).toHaveLength(30);
     expect(chapters.map((chapter) => chapter.number)).toEqual(
-      Array.from({ length: 29 }, (_, index) => index + 1),
+      Array.from({ length: 30 }, (_, index) => index + 1),
     );
     expect(chapters.slice(0, 14).map((chapter) => chapter.slug)).toEqual([
       "why-agent",
@@ -76,9 +85,31 @@ describe("course content", () => {
       "elective-e4",
       "elective-e5",
     ]);
-    expect(chapters.at(-2)?.slug).toBe("capstone");
-    expect(chapters.at(-2)?.kind).toBe("capstone");
-    expect(chapters.at(-1)?.slug).toBe("roadmap");
+    expect(chapters.at(-3)?.slug).toBe("capstone");
+    expect(chapters.at(-3)?.kind).toBe("capstone");
+    expect(chapters.at(-2)?.slug).toBe("roadmap");
+    expect(chapters.at(-1)?.slug).toBe("production-ops-intro");
+    expect(chapters.at(-1)?.curriculum).toBe("production-ops");
+  });
+
+  it("assigns agent curriculum by default and isolates production-ops", () => {
+    expect(chapters.filter((chapter) => chapter.curriculum === "agent")).toHaveLength(29);
+    expect(chapters.filter((chapter) => chapter.curriculum === "production-ops")).toHaveLength(1);
+  });
+
+  it("filters and groups chapters by curriculum for the dual-course sidebar", () => {
+    expect(curricula.map((item) => item.id)).toEqual(["agent", "production-ops"]);
+    const agentOnly = filterChaptersByCurriculum(chapterSummaries, "agent");
+    const productionOnly = filterChaptersByCurriculum(chapterSummaries, "production-ops");
+    expect(agentOnly).toHaveLength(29);
+    expect(productionOnly).toHaveLength(1);
+    expect(groupChaptersByKind(agentOnly).map((group) => group.label)).toEqual([
+      "课程",
+      "实验",
+      "选修",
+      "作品集",
+    ]);
+    expect(groupChaptersByKind(productionOnly).map((group) => group.label)).toEqual(["课程"]);
   });
 
   it("exposes lab, elective, and capstone placeholders for navigation", () => {
@@ -86,7 +117,9 @@ describe("course content", () => {
     expect(kinds.has("lab")).toBe(true);
     expect(kinds.has("elective")).toBe(true);
     expect(kinds.has("capstone")).toBe(true);
-    expect(chapters.filter((chapter) => chapter.comingSoon).length).toBe(0);
+    expect(chapters.filter((chapter) => chapter.comingSoon).map((chapter) => chapter.slug)).toEqual([
+      "production-ops-intro",
+    ]);
   });
 
   it("assigns every chapter to a known learning track with tags", () => {
