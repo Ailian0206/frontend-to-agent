@@ -3,6 +3,8 @@ import type { Chapter } from "./types";
 export const baseChapters: Omit<Chapter, "number">[] = [
   {
     slug: "why-agent",
+    kind: "lesson",
+    skills: ["S1"],
     title: "课程背景：为什么前端要转型 AI Agent？",
     shortTitle: "为什么转型 Agent",
     phase: "重新定位",
@@ -152,6 +154,8 @@ export const baseChapters: Omit<Chapter, "number">[] = [
   },
   {
     slug: "core-concepts",
+    kind: "lesson",
+    skills: ["S1","S3"],
     title: "核心概念速览",
     shortTitle: "核心概念速览",
     phase: "建立共同语言",
@@ -255,6 +259,8 @@ export const baseChapters: Omit<Chapter, "number">[] = [
   },
   {
     slug: "stack-setup",
+    kind: "lesson",
+    skills: ["S1"],
     title: "技术栈选型与环境搭建",
     shortTitle: "技术栈与环境",
     phase: "准备运行时",
@@ -401,6 +407,8 @@ main().catch((error) => {
   },
   {
     slug: "first-agent",
+    kind: "lesson",
+    skills: ["S2","S3"],
     title: "第一个 Agent：天气查询 + 邮件提醒",
     shortTitle: "第一个 ReAct Agent",
     phase: "完成闭环",
@@ -565,6 +573,8 @@ console.dir(result.messages.at(-1)?.content, { depth: null });`,
   },
   {
     slug: "tool-calling",
+    kind: "lesson",
+    skills: ["S2"],
     title: "工具调用深度实践",
     shortTitle: "Tool Calling 深入",
     phase: "收紧能力边界",
@@ -700,6 +710,8 @@ it("returns a stable business DTO", async () => {
   },
   {
     slug: "rag",
+    kind: "lesson",
+    skills: ["S5"],
     title: "RAG 检索增强生成：私有知识库",
     shortTitle: "RAG 私有知识库",
     phase: "连接私有知识",
@@ -893,6 +905,8 @@ const agent = createAgent({
   },
   {
     slug: "memory",
+    kind: "lesson",
+    skills: ["S6"],
     title: "Agent 记忆与对话管理",
     shortTitle: "记忆与对话",
     phase: "管理状态",
@@ -1007,6 +1021,8 @@ console.log(preference?.value);`,
   },
   {
     slug: "multi-agent",
+    kind: "lesson",
+    skills: ["S8"],
     title: "多 Agent 协作与工作流编排",
     shortTitle: "多 Agent 与工作流",
     phase: "显式编排",
@@ -1146,6 +1162,8 @@ console.log(result.messages.at(-1)?.content);`,
   },
   {
     slug: "deploy-observe",
+    kind: "lesson",
+    skills: ["S11"],
     title: "部署与监控：API 服务与前端界面",
     shortTitle: "部署、监控与前端",
     phase: "产品化",
@@ -1293,6 +1311,8 @@ export function useAgentChat(threadId: string) {
   },
   {
     slug: "capstone",
+    kind: "capstone",
+    skills: ["S5","S10","S11"],
     title: "最终实战：个人知识库问答 Agent",
     shortTitle: "最终实战项目",
     phase: "完整交付",
@@ -1492,6 +1512,8 @@ npm run dev`,
   },
   {
     slug: "roadmap",
+    kind: "lesson",
+    skills: ["S1"],
     title: "长期学习路线图",
     shortTitle: "16 周学习路线",
     phase: "持续成长",

@@ -12,9 +12,15 @@ GitHub Pages 部署完成后访问：
 
 <https://ailian0206.github.io/frontend-to-agent/resources/>
 
+岗位能力地图：
+
+<https://ailian0206.github.io/frontend-to-agent/skills/>
+
 ## 课程能力
 
-- 16 章系统教程，按 7 大学习轨道分类浏览
+- 四层内容结构：课程 / 实验 Lab / 选修 / 作品集
+- 岗位能力地图 `/skills`：主线 S1–S11 + 选修 E1–E5
+- 16 章系统教程（lesson）+ Lab/选修导航占位，按内容形态与学习轨道浏览
 - 16 周核心学习计划 + 选修拓展
 - Mermaid 架构图、结构化正文检索、章节深链分享
 - 20+ 组代码示例，核心实验均注明依赖版本、验证方法与章节自检

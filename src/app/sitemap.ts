@@ -16,6 +16,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly" as const,
       priority: 0.9,
     },
+    {
+      url: `${siteOrigin}/skills/`,
+      changeFrequency: "weekly" as const,
+      priority: 0.95,
+    },
     ...chapters.map((chapter) => ({
       url: `${siteOrigin}/chapter/${chapter.slug}/`,
       changeFrequency: "monthly" as const,

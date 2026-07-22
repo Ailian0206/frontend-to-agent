@@ -3,6 +3,8 @@ import type { Chapter } from "../types";
 /** Human-in-the-loop patterns as a first-class chapter. */
 export const hitlChapter: Omit<Chapter, "number"> = {
   slug: "human-in-the-loop",
+  kind: "lesson",
+  skills: ["S7"],
   title: "Human-in-the-Loop：中断、确认与恢复",
   shortTitle: "人机协作 HITL",
   phase: "把人留在关键回路",

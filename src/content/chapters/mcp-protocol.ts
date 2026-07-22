@@ -3,6 +3,8 @@ import type { Chapter } from "../types";
 /** MCP as standardized tool protocol — key 2025-2026 gap. */
 export const mcpChapter: Omit<Chapter, "number"> = {
   slug: "mcp-protocol",
+  kind: "lesson",
+  skills: ["S9"],
   title: "MCP：把工具生态标准化",
   shortTitle: "MCP 工具协议",
   phase: "协议化工具接入",

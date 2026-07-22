@@ -3,6 +3,8 @@ import type { Chapter } from "../types";
 /** Evaluation, security, and observability as a dedicated production track. */
 export const evalSecurityChapter: Omit<Chapter, "number"> = {
   slug: "eval-security",
+  kind: "lesson",
+  skills: ["S10"],
   title: "评估、安全与可观测性",
   shortTitle: "评估与安全",
   phase: "用证据上线",
