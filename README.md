@@ -20,22 +20,25 @@ GitHub Pages 部署完成后访问：
 
 - 四层内容结构：课程 / 实验 Lab / 选修 / 作品集
 - 岗位能力地图 `/skills`：主线 S1–S11 + 选修 E1–E5
-- 16 章系统教程（lesson）+ Lab/选修导航；**L01–L03 已交付可运行子包**
+- 16 章系统教程（lesson）+ Lab/选修导航；**L01–L06 已交付可运行子包**
 - 16 周核心学习计划 + 选修拓展
 - Mermaid 架构图、结构化正文检索、章节深链分享
 - 20+ 组代码示例，核心实验均注明依赖版本、验证方法与章节自检
 - 公开资源库：GitHub / 官方文档 / 公开中文文章（原创摘要，外链阅读）
 - 桌面三栏学习工作台与移动端目录抽屉
 - `examples/knowledge-agent` 完整知识库 Agent 项目
-- `examples/lab-l01-structured-output` / `lab-l02-tool-contract` / `lab-l03-react-stream`
+- `examples/lab-l01-structured-output` … `lab-l06-supervisor`
 
-## Labs（M2）
+## Labs（M2–M3）
 
 | Lab | 能力 | 目录 |
 |---|---|---|
 | L01 | S1 | `examples/lab-l01-structured-output` |
 | L02 | S2 | `examples/lab-l02-tool-contract` |
 | L03 | S3/S4 | `examples/lab-l03-react-stream` |
+| L04 | S5 | `examples/lab-l04-rag-eval` |
+| L05 | S6/S7 | `examples/lab-l05-checkpoint-hitl` |
+| L06 | S8 | `examples/lab-l06-supervisor` |
 
 每个 Lab：`cd` 进入目录后 `npm install && npm test`。CI 通过根目录 `npm run test:examples` 串联，**不会**调用付费模型。
 

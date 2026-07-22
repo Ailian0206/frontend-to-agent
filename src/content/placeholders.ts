@@ -321,14 +321,230 @@ const labL03: PlaceholderDraft = {
   ],
 };
 
-/** Lab entries: L01–L03 shipped in M2; L04–L08 remain stubs. */
+const labL04: PlaceholderDraft = {
+  slug: "lab-l04",
+  kind: "lab",
+  skills: ["S5"],
+  title: "Lab L04：RAG 入库与检索评估（Recall@K）",
+  shortTitle: "L04 RAG 评估",
+  phase: "实验",
+  track: "知识检索",
+  tags: ["Lab", "S5", "Recall@K", "Chunking"],
+  duration: "45–60 分钟",
+  level: "实战",
+  goal: "用内存语料完成切块与检索，并用 Recall@K 证明检索质量可回归，对应能力 S5。",
+  terms: ["Chunking", "Recall@K", "BM25"],
+  sections: [
+    {
+      id: "goal",
+      title: "实验目标与能力",
+      blocks: [
+        {
+          type: "paragraph",
+          text: "仓库：examples/lab-l04-rag-eval。不接向量云与付费模型；用 fixture + 词项重叠检索验证切块与 Recall@K。",
+        },
+        {
+          type: "callout",
+          tone: "note",
+          title: "关联课程",
+          text: "配合 /chapter/rag；把课里的评估表落成可跑单测。",
+        },
+      ],
+    },
+    {
+      id: "repo",
+      title: "仓库与本地步骤",
+      blocks: [
+        {
+          type: "steps",
+          items: [
+            { title: "安装", detail: "cd examples/lab-l04-rag-eval && npm install" },
+            { title: "单测", detail: "npm test —— 切块边界、排序、recallAtK 数学与金标。" },
+          ],
+        },
+        {
+          type: "code",
+          language: "typescript",
+          filename: "examples/lab-l04-rag-eval/src/metrics.ts",
+          code: `export function recallAtK(relevantIds: string[], retrievedIds: string[], k: number): number {
+  // 金标为空时约定返回 1；否则 |relevant ∩ topK| / |relevant|
+}`,
+          caption: "完整实现见 examples/lab-l04-rag-eval。",
+        },
+      ],
+    },
+    {
+      id: "accept",
+      title: "验收清单",
+      blocks: [
+        {
+          type: "checkpoint",
+          title: "Lab L04 验收",
+          criteria: [
+            "npm test 全绿且无网络/OpenAI",
+            "切块 id 稳定可复现",
+            "金标查询 top-k 含关键 chunk",
+            "recallAtK 边界用例正确",
+            "README 含能力 S5 与 ≥5 条验收",
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+const labL05: PlaceholderDraft = {
+  slug: "lab-l05",
+  kind: "lab",
+  skills: ["S6", "S7"],
+  title: "Lab L05：Checkpoint 与 HITL 邮件确认",
+  shortTitle: "L05 Checkpoint + HITL",
+  phase: "实验",
+  track: "状态编排",
+  tags: ["Lab", "S6", "S7", "HITL"],
+  duration: "45–60 分钟",
+  level: "实战",
+  goal: "内存 checkpoint 可恢复；邮件副作用必须经 confirm token，且二次确认幂等。",
+  terms: ["Checkpoint", "HITL", "Idempotency"],
+  sections: [
+    {
+      id: "goal",
+      title: "实验目标与能力",
+      blocks: [
+        {
+          type: "paragraph",
+          text: "仓库：examples/lab-l05-checkpoint-hitl。覆盖 S6 会话恢复与 S7 人工确认；无真实 SMTP。",
+        },
+        {
+          type: "callout",
+          tone: "note",
+          title: "关联课程",
+          text: "配合 /chapter/memory 与 /chapter/human-in-the-loop。",
+        },
+      ],
+    },
+    {
+      id: "repo",
+      title: "仓库与本地步骤",
+      blocks: [
+        {
+          type: "steps",
+          items: [
+            { title: "安装", detail: "cd examples/lab-l05-checkpoint-hitl && npm install" },
+            { title: "单测", detail: "npm test —— save/load、坏 token、reject、二次 confirm 幂等。" },
+          ],
+        },
+        {
+          type: "code",
+          language: "typescript",
+          filename: "examples/lab-l05-checkpoint-hitl/src/hitl.ts",
+          code: `// proposeEmailSend → confirm_required + token
+// confirm(proposalId, token) 执行一次；错误 token 失败；重复 confirm 幂等`,
+          caption: "详见 examples/lab-l05-checkpoint-hitl/README.md。",
+        },
+      ],
+    },
+    {
+      id: "accept",
+      title: "验收清单",
+      blocks: [
+        {
+          type: "checkpoint",
+          title: "Lab L05 验收",
+          criteria: [
+            "npm test 全绿",
+            "thread checkpoint 可 save/load",
+            "无 token 无法发送",
+            "错误 token 不触发副作用",
+            "二次 confirm 不重复发送",
+            "README 含 S6/S7 与 ≥5 条验收",
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+const labL06: PlaceholderDraft = {
+  slug: "lab-l06",
+  kind: "lab",
+  skills: ["S8"],
+  title: "Lab L06：Supervisor 双 Worker 最小权限",
+  shortTitle: "L06 Supervisor",
+  phase: "实验",
+  track: "状态编排",
+  tags: ["Lab", "S8", "Supervisor"],
+  duration: "45 分钟",
+  level: "实战",
+  goal: "Supervisor 按意图路由到只读 Worker，白名单外工具一律 FORBIDDEN。",
+  terms: ["Supervisor", "Least Privilege", "Routing"],
+  sections: [
+    {
+      id: "goal",
+      title: "实验目标与能力",
+      blocks: [
+        {
+          type: "paragraph",
+          text: "仓库：examples/lab-l06-supervisor。对应 S8：何时拆 Worker、如何最小权限。",
+        },
+        {
+          type: "callout",
+          tone: "note",
+          title: "关联课程",
+          text: "配合 /chapter/multi-agent。",
+        },
+      ],
+    },
+    {
+      id: "repo",
+      title: "仓库与本地步骤",
+      blocks: [
+        {
+          type: "steps",
+          items: [
+            { title: "安装", detail: "cd examples/lab-l06-supervisor && npm install" },
+            { title: "单测", detail: "npm test —— 路由表、白名单、unknown 拒答。" },
+          ],
+        },
+        {
+          type: "code",
+          language: "typescript",
+          filename: "examples/lab-l06-supervisor/src/supervisor.ts",
+          code: `// route(intent) → Worker A/B 或 reject
+// run(...) 仅允许 worker.allowedTools 内的工具名`,
+          caption: "详见 examples/lab-l06-supervisor/README.md。",
+        },
+      ],
+    },
+    {
+      id: "accept",
+      title: "验收清单",
+      blocks: [
+        {
+          type: "checkpoint",
+          title: "Lab L06 验收",
+          criteria: [
+            "npm test 全绿且无付费模型",
+            "order_status 路由到订单 Worker",
+            "policy_question 路由到文档 Worker",
+            "越权工具 → FORBIDDEN",
+            "unknown → reject",
+            "README 含 S8 与 ≥5 条验收",
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+/** Lab entries: L01–L06 shipped; L07–L08 remain stubs until M4. */
 export const labPlaceholders: PlaceholderDraft[] = [
   labL01,
   labL02,
   labL03,
-  labStub("lab-l04", "L04 RAG 评估", "Lab L04：RAG 入库与检索评估（Recall@K）", ["S5"], "知识检索"),
-  labStub("lab-l05", "L05 Checkpoint + HITL", "Lab L05：Checkpoint 与 HITL 邮件确认", ["S6", "S7"], "状态编排"),
-  labStub("lab-l06", "L06 Supervisor", "Lab L06：Supervisor 双 Worker 最小权限", ["S8"], "状态编排"),
+  labL04,
+  labL05,
+  labL06,
   labStub("lab-l07", "L07 只读 MCP", "Lab L07：只读 MCP Server 与白名单 Agent", ["S9"], "工具与协议"),
   labStub("lab-l08", "L08 评估与门禁", "Lab L08：轨迹评估、输出护栏与 API 门禁", ["S10", "S11"], "工程上线"),
 ];

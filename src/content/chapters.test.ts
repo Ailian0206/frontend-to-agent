@@ -85,7 +85,7 @@ describe("course content", () => {
     expect(kinds.has("lab")).toBe(true);
     expect(kinds.has("elective")).toBe(true);
     expect(kinds.has("capstone")).toBe(true);
-    expect(chapters.filter((chapter) => chapter.comingSoon).length).toBeGreaterThanOrEqual(8);
+    expect(chapters.filter((chapter) => chapter.comingSoon).length).toBeGreaterThanOrEqual(7);
   });
 
   it("assigns every chapter to a known learning track with tags", () => {
@@ -172,6 +172,41 @@ describe("course content", () => {
 
   it("ships L01–L03 labs as non-placeholder content with example paths", () => {
     for (const slug of ["lab-l01", "lab-l02", "lab-l03"]) {
+      const chapter = chapters.find((item) => item.slug === slug);
+      expect(chapter, slug).toBeDefined();
+      expect(chapter!.comingSoon).toBeFalsy();
+      expect(chapter!.kind).toBe("lab");
+      const text = chapter!
+        .sections.flatMap((section) => section.blocks)
+        .map((block) => blockSearchText(block))
+        .join(" ");
+      expect(text).toMatch(/examples\/lab-l0/);
+      expect(
+        chapter!.sections.some((section) =>
+          section.blocks.some((block) => block.type === "checkpoint"),
+        ),
+      ).toBe(true);
+    }
+  });
+
+  it("deepens M3 lessons with decision, failure, interview, and lab links", () => {
+    const m3Lessons = ["rag", "memory", "human-in-the-loop", "multi-agent"];
+    for (const slug of m3Lessons) {
+      const chapter = chapters.find((item) => item.slug === slug);
+      expect(chapter, slug).toBeDefined();
+      const text = chapter!
+        .sections.flatMap((section) => section.blocks)
+        .map((block) => blockSearchText(block))
+        .join(" ");
+      expect(text).toMatch(/何时用|何时不用/);
+      expect(text).toMatch(/失败|调试/);
+      expect(text).toMatch(/面试/);
+      expect(chapter!.relatedLabs?.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("ships L04–L06 labs as non-placeholder content with example paths", () => {
+    for (const slug of ["lab-l04", "lab-l05", "lab-l06"]) {
       const chapter = chapters.find((item) => item.slug === slug);
       expect(chapter, slug).toBeDefined();
       expect(chapter!.comingSoon).toBeFalsy();

@@ -108,3 +108,10 @@ test("opens shipped lab L01 without coming-soon chrome", async ({ page }) => {
   await expect(page.getByText("本实验将在后续里程碑提供可运行仓库")).toHaveCount(0);
   await expect(page.getByRole("link", { name: /S1/ }).first()).toBeVisible();
 });
+
+test("opens shipped lab L04 without coming-soon chrome", async ({ page }) => {
+  await page.goto("/chapter/lab-l04/");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("RAG");
+  await expect(page.getByText("examples/lab-l04-rag-eval").first()).toBeVisible();
+  await expect(page.getByText("本实验将在后续里程碑提供可运行仓库")).toHaveCount(0);
+});
