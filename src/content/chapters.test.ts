@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { chapters, searchChapters } from "./chapters";
+import { chapters, searchChapters, blockSearchText } from "./chapters";
 import { groupChaptersByTrack } from "./course-index";
 import { courseResources } from "./resources";
 import { coreSkillIds, electiveSkillIds, skillMap } from "./skills";
@@ -151,6 +151,41 @@ describe("course content", () => {
       for (const id of chapter.relatedResources ?? []) {
         expect(resourceIds.has(id), `${chapter.slug} references missing resource ${id}`).toBe(true);
       }
+    }
+  });
+
+  it("deepens M2 lessons with decision, failure, interview, and lab links", () => {
+    const m2Lessons = ["prompt-structured", "tool-calling", "first-agent", "streaming-ui"];
+    for (const slug of m2Lessons) {
+      const chapter = chapters.find((item) => item.slug === slug);
+      expect(chapter, slug).toBeDefined();
+      const text = chapter!
+        .sections.flatMap((section) => section.blocks)
+        .map((block) => blockSearchText(block))
+        .join(" ");
+      expect(text).toMatch(/何时用|何时不用/);
+      expect(text).toMatch(/失败|调试/);
+      expect(text).toMatch(/面试/);
+      expect(chapter!.relatedLabs?.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("ships L01–L03 labs as non-placeholder content with example paths", () => {
+    for (const slug of ["lab-l01", "lab-l02", "lab-l03"]) {
+      const chapter = chapters.find((item) => item.slug === slug);
+      expect(chapter, slug).toBeDefined();
+      expect(chapter!.comingSoon).toBeFalsy();
+      expect(chapter!.kind).toBe("lab");
+      const text = chapter!
+        .sections.flatMap((section) => section.blocks)
+        .map((block) => blockSearchText(block))
+        .join(" ");
+      expect(text).toMatch(/examples\/lab-l0/);
+      expect(
+        chapter!.sections.some((section) =>
+          section.blocks.some((block) => block.type === "checkpoint"),
+        ),
+      ).toBe(true);
     }
   });
 });

@@ -9,8 +9,9 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:examples": "npm --prefix examples/lab-l01-structured-output ci && npm --prefix examples/lab-l01-structured-output test && npm --prefix examples/lab-l02-tool-contract ci && npm --prefix examples/lab-l02-tool-contract test && npm --prefix examples/lab-l03-react-stream ci && npm --prefix examples/lab-l03-react-stream test",
     "test:e2e": "playwright test",
-    "test:ci": "npm run lint && npm run typecheck && npm run test && npm run build"
+    "test:ci": "npm run lint && npm run typecheck && npm run test && npm run test:examples && npm run build"
   },
   "engines": {
     "node": "22.x"

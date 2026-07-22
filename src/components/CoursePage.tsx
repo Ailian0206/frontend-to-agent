@@ -46,6 +46,16 @@ export function CoursePage({ chapter }: { chapter: Chapter }) {
               );
             })}
           </div>
+          {chapter.relatedLabs?.length ? (
+            <div className="lab-link-row" aria-label="关联实验">
+              <span>关联实验</span>
+              {chapter.relatedLabs.map((slug) => (
+                <Link className="skill-badge" href={`/chapter/${slug}`} key={slug}>
+                  {slug}
+                </Link>
+              ))}
+            </div>
+          ) : null}
           <div className="tag-row" aria-label="本章标签">
             {chapter.tags.map((tag) => <code key={tag}>{tag}</code>)}
           </div>

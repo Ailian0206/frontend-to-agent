@@ -100,3 +100,11 @@ test("opens skills map", async ({ page }) => {
   await expect(main.getByRole("heading", { name: /E1/ }).first()).toBeVisible();
   await expect(page.getByRole("button", { name: "标记本章完成" })).toHaveCount(0);
 });
+
+test("opens shipped lab L01 without coming-soon chrome", async ({ page }) => {
+  await page.goto("/chapter/lab-l01/");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("结构化输出");
+  await expect(page.getByText("examples/lab-l01-structured-output").first()).toBeVisible();
+  await expect(page.getByText("本实验将在后续里程碑提供可运行仓库")).toHaveCount(0);
+  await expect(page.getByRole("link", { name: /S1/ }).first()).toBeVisible();
+});
