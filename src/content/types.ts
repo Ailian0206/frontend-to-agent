@@ -12,6 +12,28 @@ export type CourseTrack =
 
 export type ResourceKind = "github" | "docs" | "course" | "article" | "video";
 
+/** Content layer for sidebar grouping: lesson / lab / elective / capstone. */
+export type ContentKind = "lesson" | "lab" | "elective" | "capstone";
+
+/** JD-aligned skill IDs from the curriculum skill map. */
+export type SkillId =
+  | "S1"
+  | "S2"
+  | "S3"
+  | "S4"
+  | "S5"
+  | "S6"
+  | "S7"
+  | "S8"
+  | "S9"
+  | "S10"
+  | "S11"
+  | "E1"
+  | "E2"
+  | "E3"
+  | "E4"
+  | "E5";
+
 export type ContentBlock =
   | { type: "paragraph"; text: string }
   | { type: "quote"; text: string; author: string; source?: string }
@@ -62,6 +84,12 @@ export interface Chapter {
   phase: string;
   track: CourseTrack;
   tags: string[];
+  /** Content layer used for left-nav grouping. */
+  kind: ContentKind;
+  /** Linked entries from the skill map (S1–S11 / E1–E5). */
+  skills: SkillId[];
+  /** Stub chapter reserved for a later milestone (nav-only for now). */
+  comingSoon?: boolean;
   duration: string;
   level: "基础" | "进阶" | "实战" | "工程化";
   goal: string;

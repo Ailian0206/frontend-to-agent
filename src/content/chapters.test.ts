@@ -2,9 +2,29 @@ import { describe, expect, it } from "vitest";
 import { chapters, searchChapters } from "./chapters";
 import { groupChaptersByTrack } from "./course-index";
 import { courseResources } from "./resources";
+import { coreSkillIds, electiveSkillIds, skillMap } from "./skills";
 import { courseTracks } from "./taxonomy";
 
 describe("course content", () => {
+  it("defines core skills S1–S11 and elective skills E1–E5", () => {
+    expect(coreSkillIds).toEqual([
+      "S1",
+      "S2",
+      "S3",
+      "S4",
+      "S5",
+      "S6",
+      "S7",
+      "S8",
+      "S9",
+      "S10",
+      "S11",
+    ]);
+    expect(electiveSkillIds).toEqual(["E1", "E2", "E3", "E4", "E5"]);
+    expect(skillMap).toHaveLength(16);
+    expect(new Set(skillMap.map((skill) => skill.id)).size).toBe(16);
+  });
+
   it("contains the expanded 16-chapter curriculum in sequence", () => {
     expect(chapters).toHaveLength(16);
     expect(chapters.map((chapter) => chapter.number)).toEqual([
