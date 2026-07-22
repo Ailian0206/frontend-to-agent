@@ -5,13 +5,13 @@ import type { Chapter } from "../types";
 import { evalSecurityChapter } from "./eval-security";
 import { hitlChapter } from "./human-in-the-loop";
 import { mcpChapter } from "./mcp-protocol";
-import { productionOpsIntroChapter } from "./production-ops-stub";
+import { productionOpsChapters } from "./production-ops";
 import { promptStructuredChapter } from "./prompt-structured";
 import { streamingUiChapter } from "./streaming-ui";
 
 /**
  * Assemble curriculum layers: lessons → labs → electives → capstone → roadmap,
- * then production-ops stubs (separate top-level course).
+ * then production-ops lessons (separate top-level course).
  */
 const lessonChapters: Omit<Chapter, "number">[] = [
   baseChapters[0], // why-agent
@@ -36,7 +36,7 @@ const orderedWithoutNumbers: Omit<Chapter, "number">[] = [
   ...electivePlaceholders,
   baseChapters[9], // capstone
   baseChapters[10], // roadmap
-  productionOpsIntroChapter,
+  ...productionOpsChapters,
 ];
 
 export const chapters: Chapter[] = orderedWithoutNumbers.map((chapter, index) => ({

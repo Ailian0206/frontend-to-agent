@@ -108,7 +108,7 @@ test("switches top-level curriculum and collapses kind groups", async ({ page },
   await expect(page).toHaveURL(/production-ops-intro/, { timeout: 15_000 });
   await ensureNavOpen();
   await expect(page.getByRole("tab", { name: "生产运维" })).toHaveAttribute("aria-selected", "true");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("生产部署与运维");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("P01 托管生产系统地图");
   await expect(page.getByRole("link", { name: /能力地图/ })).toHaveCount(0);
 
   await page.getByRole("tab", { name: "AI Agent" }).click();

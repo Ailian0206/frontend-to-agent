@@ -204,7 +204,7 @@ git commit -m "feat(ui): 渲染生产课程标注截图"
 - Modify: `src/content/chapters/index.ts`
 - Modify: `src/content/chapters.test.ts`
 
-- [ ] **Step 1: 写 P01-P02 顺序与内容 RED 测试**
+- [x] **Step 1: 写 P01-P02 顺序与内容 RED 测试**
 
 ```ts
 const productionOps = chapters.filter((chapter) => chapter.curriculum === "production-ops");
@@ -226,13 +226,13 @@ for (const slug of ["production-ops-intro", "production-inspection-rhythm"]) {
 }
 ```
 
-- [ ] **Step 2: 运行测试确认 RED**
+- [x] **Step 2: 运行测试确认 RED**
 
 Run: `PATH=$HOME/.nvm/versions/node/v22.22.1/bin:$PATH npm test -- src/content/chapters.test.ts`
 
 Expected: FAIL，专题数组为空。
 
-- [ ] **Step 3: 编写 P01-P02 完整正文**
+- [x] **Step 3: 编写 P01-P02 完整正文**
 
 P01 至少包含：浏览器→Vercel→Supabase/Auth→Inngest→Sentry Mermaid 拓扑、Development/Preview/Production 对比表、四平台职责边界、变量流向、`evidence-graph` 只读案例、停止条件和自检。P02 至少包含：发布后/每日/每周/每月/故障节奏、正常/可疑/需处理信号、三级风险矩阵、10 分钟个人项目巡检记录模板、误区和自检。
 
@@ -246,7 +246,7 @@ skills: ["S11", "E2", "E3", "E4"],
 duration: "35–45 分钟",
 ```
 
-- [ ] **Step 4: 装配 P01-P02 并固定最终 slug 契约**
+- [x] **Step 4: 装配 P01-P02 并固定最终 slug 契约**
 
 `productionOpsChapters` 本任务只导出 P01-P02；后续任务每次只追加已经完成正文和测试的课程。最终顺序固定为：
 
@@ -271,7 +271,7 @@ duration: "35–45 分钟",
 
 删除菜单里程碑提供的 `production-ops-stub.ts`，由正式 P01 接管同一 `production-ops-intro` slug。Agent 课程的 `deploy-observe` 对象和位置不变。`productionOpsChapters` 按 P01-P14 顺序整体装配；课程切换器、相邻章节与进度通过 `curriculum` 过滤，不依赖全局章节相邻位置。
 
-- [ ] **Step 5: 验证 GREEN、路由和导航并提交**
+- [x] **Step 5: 验证 GREEN、路由和导航并提交**
 
 Run:
 

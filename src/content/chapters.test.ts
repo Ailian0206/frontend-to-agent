@@ -48,9 +48,9 @@ describe("course content", () => {
   });
 
   it("contains the expanded curriculum with labs and electives in sequence", () => {
-    expect(chapters).toHaveLength(30);
+    expect(chapters).toHaveLength(31);
     expect(chapters.map((chapter) => chapter.number)).toEqual(
-      Array.from({ length: 30 }, (_, index) => index + 1),
+      Array.from({ length: 31 }, (_, index) => index + 1),
     );
     expect(chapters.slice(0, 14).map((chapter) => chapter.slug)).toEqual([
       "why-agent",
@@ -85,16 +85,14 @@ describe("course content", () => {
       "elective-e4",
       "elective-e5",
     ]);
-    expect(chapters.at(-3)?.slug).toBe("capstone");
-    expect(chapters.at(-3)?.kind).toBe("capstone");
-    expect(chapters.at(-2)?.slug).toBe("roadmap");
-    expect(chapters.at(-1)?.slug).toBe("production-ops-intro");
-    expect(chapters.at(-1)?.curriculum).toBe("production-ops");
+    expect(chapters.at(-4)?.slug).toBe("capstone");
+    expect(chapters.at(-4)?.kind).toBe("capstone");
+    expect(chapters.at(-3)?.slug).toBe("roadmap");
   });
 
   it("assigns agent curriculum by default and isolates production-ops", () => {
     expect(chapters.filter((chapter) => chapter.curriculum === "agent")).toHaveLength(29);
-    expect(chapters.filter((chapter) => chapter.curriculum === "production-ops")).toHaveLength(1);
+    expect(chapters.filter((chapter) => chapter.curriculum === "production-ops")).toHaveLength(2);
   });
 
   it("filters and groups chapters by curriculum for the dual-course sidebar", () => {
@@ -102,7 +100,7 @@ describe("course content", () => {
     const agentOnly = filterChaptersByCurriculum(chapterSummaries, "agent");
     const productionOnly = filterChaptersByCurriculum(chapterSummaries, "production-ops");
     expect(agentOnly).toHaveLength(29);
-    expect(productionOnly).toHaveLength(1);
+    expect(productionOnly).toHaveLength(2);
     expect(groupChaptersByKind(agentOnly).map((group) => group.label)).toEqual([
       "课程",
       "实验",
@@ -117,9 +115,34 @@ describe("course content", () => {
     expect(kinds.has("lab")).toBe(true);
     expect(kinds.has("elective")).toBe(true);
     expect(kinds.has("capstone")).toBe(true);
-    expect(chapters.filter((chapter) => chapter.comingSoon).map((chapter) => chapter.slug)).toEqual([
+    expect(chapters.filter((chapter) => chapter.comingSoon)).toEqual([]);
+  });
+
+  it("ships P01-P02 as ordered production-ops lessons with risk and inspection guidance", () => {
+    const productionOps = chapters.filter((chapter) => chapter.curriculum === "production-ops");
+
+    expect(productionOps.map((chapter) => chapter.slug)).toEqual([
       "production-ops-intro",
+      "production-inspection-rhythm",
     ]);
+    expect(productionOps.every((chapter) => chapter.kind === "lesson")).toBe(true);
+    expect(productionOps.every((chapter) => chapter.track === "工程上线")).toBe(true);
+    expect(productionOps.every((chapter) => !chapter.comingSoon)).toBe(true);
+    expect(chapters.find((chapter) => chapter.slug === "deploy-observe")?.curriculum).toBe("agent");
+
+    for (const chapter of productionOps) {
+      const text = chapter.sections
+        .flatMap((section) => section.blocks)
+        .map(blockSearchText)
+        .join(" ");
+      expect(text).toMatch(/只读|普通变更|高风险/);
+      expect(text).toMatch(/发布后|每日|每周|每月|故障/);
+      expect(
+        chapter.sections.some((section) =>
+          section.blocks.some((block) => block.type === "checkpoint"),
+        ),
+      ).toBe(true);
+    }
   });
 
   it("assigns every chapter to a known learning track with tags", () => {
