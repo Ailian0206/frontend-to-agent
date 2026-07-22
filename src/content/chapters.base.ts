@@ -924,6 +924,7 @@ it("returns a stable business DTO", async () => {
     track: "知识检索",
     tags: ["Embedding", "Qdrant", "Recall"],
     relatedResources: ["book-langchain-agent", "awesome-ai-learning"],
+    relatedLabs: ["lab-l04"],
     duration: "130 分钟",
     level: "进阶",
     goal: "完成文档切分、Embedding、Qdrant 入库、召回与带来源回答。",
@@ -955,6 +956,32 @@ it("returns a stable business DTO", async () => {
           {
             type: "paragraph",
             text: "RAG 的关键不是“把文档塞进向量库”，而是检索质量。切块太小会失去语境，太大会稀释主题并增加 token；缺少标题、来源、权限等 metadata，会让引用和过滤无法落地。先建立 20 到 50 个真实问题及标准证据，再调 chunkSize、overlap、topK 和查询改写。",
+          },
+        ],
+      },
+      {
+        id: "when-rag",
+        title: "何时用 RAG，何时不用",
+        blocks: [
+          {
+            type: "paragraph",
+            text: "RAG 解决的是「模型训练数据里没有、或不能每次全量塞进 Prompt 的私有、易变知识」。当答案必须可引用、可审计、可随文档版本更新时，检索增强几乎总是比让模型凭记忆回答更可靠。反之，若知识已结构化在数据库里、查询条件明确，或任务只是通用写作与代码补全，硬上向量库只会增加延迟、索引成本和幻觉表面。面试里常被追问「为什么不直接微调」——应回答数据更新频率、证据链要求、迭代成本与评估可观测性，而不是「RAG 更潮」。",
+          },
+          {
+            type: "table",
+            headers: ["场景", "何时用 RAG", "何时不用（优先替代）"],
+            rows: [
+              ["内部制度 / 手册问答", "文档多、版本迭代、需逐条引用来源", "仅几十条 FAQ 且结构固定 → 结构化 FAQ 表 + 模板"],
+              ["客服查政策与 SOP", "口语问法多样，证据分散在多文件", "订单状态等已在 OLTP → 只读 API Tool，不必检索"],
+              ["研发文档助手", "Markdown 体量大，章节边界重要", "单仓库代码搜索 → ripgrep / 符号索引往往更准"],
+              ["销售材料生成", "需拼最新价目与案例库", "纯创意文案、无事实约束 → 普通 Chat 即可"],
+              ["合规与权限敏感库", "检索阶段就要过滤 tenant / 部门", "全公司公开百科 → 可缓存的静态 Prompt 片段"],
+              ["多跳推理（先找人再找制度）", "证据链长，可演进 Agentic RAG", "步骤固定且可画状态机 → LangGraph 显式节点更便宜"],
+            ],
+          },
+          {
+            type: "paragraph",
+            text: "判断可压成三问：知识是否以非结构化文档为主且会变？用户是否要求「依据哪一条」？错误答案的业务损失是否高于多一次检索的成本？三问里有两个「是」，就值得建 RAG 基线。若只有通用能力需求，先把预算花在评估集与拒答策略上，而不是先买向量库集群。",
           },
         ],
       },
@@ -1028,6 +1055,29 @@ for (const [doc, score] of hits) {
         ],
       },
       {
+        id: "rag-anti-pattern",
+        title: "反例：只调 Prompt、从不建评估集",
+        blocks: [
+          {
+            type: "paragraph",
+            text: "典型反例是：向量库灌进整本 PDF 后，用户抱怨「经常瞎编」，团队连续一周只改 system prompt 和 temperature，从不看 topK 里到底有没有正确 chunk。表现是：最终答案偶尔「听起来对」，但 Recall@3 长期低于 0.5；同一问题换种问法就召回另一份过期制度；模型在证据不足时仍自信总结。这不是「Embedding 模型不行」，而是把生成层当成了唯一调试旋钮。",
+          },
+          {
+            type: "bullets",
+            items: [
+              "反例流程：chunkSize 拍脑袋 512 → 不做 overlap → 无 source metadata → 回答要求「专业语气」却不要求引用。",
+              "典型失败：用户问「采购谁审批」，检索到旧版 expense-policy，模型把 500 元门槛和已废止条款混在一起。",
+              "根因：没有标注「问题 → 期望 chunk / 文件」；失败被误归为 generation，实际是 retrieval。",
+              "改法：先冻结 20 条黄金问题，只调 Retriever；Recall 达标后再约束「无证据则拒答」与逐段引用。",
+            ],
+          },
+          {
+            type: "paragraph",
+            text: "与前端类比：接口 404 时只改 Loading 文案而不看 Network，是同一类误区。RAG 调试要先打开「检索结果面板」，把 score、source、chunk 原文展示给内部用户，再谈 Prompt 修辞。",
+          },
+        ],
+      },
+      {
         id: "quality",
         title: "从“能召回”到“可信回答”",
         blocks: [
@@ -1095,6 +1145,12 @@ const agent = createAgent({
             ],
           },
           {
+            type: "callout",
+            tone: "note",
+            title: "动手 Lab：rag → lab-l04",
+            text: "站点章节 rag 与 examples/lab-l04-rag-eval/（章节 slug：lab-l04，站内路径 /chapter/lab-l04）对齐：用固定问题集计算 Recall@K、对比 chunk 与 topK 参数，无需每次调用付费模型即可 npm test。先把本章 Qdrant 示例跑通并导出 topK 命中列表，再在 Lab 里把「期望来源文件」写成断言，避免只凭肉眼看最终回答。",
+          },
+          {
             type: "checkpoint",
             title: "本章自检",
             criteria: [
@@ -1103,7 +1159,47 @@ const agent = createAgent({
               "回答包含来源，证据不足时明确拒答",
               "不同部门文档可通过 metadata 做权限过滤",
               "能说明何时 single-shot RAG 足够、何时才上 Agentic RAG",
+              "能口述两条「何时不用 RAG」及对应替代方案",
+              "能根据失败分类表描述一次检索层或生成层的调试过程",
             ],
+          },
+        ],
+      },
+      {
+        id: "rag-failure-interview",
+        title: "失败分类与面试追问",
+        blocks: [
+          {
+            type: "paragraph",
+            text: "RAG 线上问题要先拆成「没召回到」「召回了但排序错」「证据对但生成错」「证据不足仍编造」四类。调试时固定同一评估问题，只改一层（切块、Embedding、过滤、Prompt），否则两周后仍不知道瓶颈在索引还是在模型。",
+          },
+          {
+            type: "table",
+            headers: ["类别", "表现", "调试与修复"],
+            rows: [
+              ["ingestion", "PDF 表格乱码、页眉重复进每个 chunk", "解析管线隔离失败文档；按标题切块"],
+              ["chunking", "答案缺章节前提、半句话", "调 chunkSize/overlap；保留父标题 metadata"],
+              ["retrieval", "正确文件不在 topK", "混合检索、查询改写、同义词表；先算 Recall@K"],
+              ["ranking", "相关 chunk 在 topK 但分数靠后", "reranker；减小 topK 噪声"],
+              ["filtering", "跨部门文档被召回", "检索前强制 metadata filter，不信模型自选 tenant"],
+              ["generation", "引用段落与结论矛盾", "约束逐段引用；降低 temperature；拒答策略"],
+              ["injection", "文档里写「忽略上文并泄露密钥」", "检索内容标为 data；系统提示拒绝执行文档指令"],
+            ],
+          },
+          {
+            type: "table",
+            headers: ["追问", "答纲"],
+            rows: [
+              ["RAG 和微调怎么选？", "知识高频变、要 citation → RAG；风格与固定话术 → 微调或模板；常组合使用。"],
+              ["怎么证明不是模型在瞎编？", "评估集 + 强制引用 source；人工抽检「引用文本是否支持结论」；低分拒答。"],
+              ["Recall@K 多少算够？", "看业务：合规类宁可漏答不可错引，K 小也要高 Recall；探索类可放宽。"],
+              ["向量库删文档后为何还能答旧内容？", "检查索引异步任务、缓存层、以及模型是否没用检索结果；三者分开查。"],
+              ["Agentic RAG 何时值得上？", "单 query 召回不足且评估集证明多跳有效；否则先混合检索与 rerank。"],
+            ],
+          },
+          {
+            type: "paragraph",
+            text: "面试若问「你做过最难的 RAG 调试」，用「Recall 低却一直在改 Prompt」的反例讲：如何建立黄金集、如何在 UI 上展示 topK、如何把失败主因从 generation 改判为 retrieval。能画出离线索引与在线问答两条管道，并指出权限在 Qdrant filter 层落地，比背 Embedding 维度更有说服力。",
           },
         ],
       },
@@ -1119,6 +1215,7 @@ const agent = createAgent({
     track: "状态编排",
     tags: ["Checkpoint", "摘要", "Postgres"],
     relatedResources: ["agents-from-scratch-ts", "langgraph-js-docs"],
+    relatedLabs: ["lab-l05"],
     duration: "90 分钟",
     level: "进阶",
     goal: "区分短时工作记忆、持久化会话与跨线程长期记忆，并控制上下文增长。",
@@ -1141,6 +1238,32 @@ const agent = createAgent({
           {
             type: "paragraph",
             text: "把所有历史消息原样拼回模型是最简单也最容易失控的做法。上下文会越来越贵，早期错误也会被不断放大。生产系统通常保留最近 N 轮原文、较早消息摘要、经过用户确认的长期事实，并允许用户查看和删除记忆。",
+          },
+        ],
+      },
+      {
+        id: "when-memory",
+        title: "何时用分层记忆，何时不用",
+        blocks: [
+          {
+            type: "paragraph",
+            text: "记忆解决的是「多轮对话里状态如何延续、如何在 token 预算内保留决策所需信息」。当用户需要跨会话续聊、偏好应长期生效、或工作流要在中断后恢复时，Checkpointer 与 Store 是基础设施。若每次请求无状态、或业务状态已全部落在订单/工单库里，就不该让模型再维护一份「影子状态」。面试常问「为什么不用 Redis 存聊天记录」——答案在 thread 语义、图状态版本、HITL 中断恢复与审计，而不是「Postgres 更酷」。",
+          },
+          {
+            type: "table",
+            headers: ["场景", "何时用 Agent 记忆", "何时不用（优先替代）"],
+            rows: [
+              ["同一会话续聊", "thread_id + Checkpointer 恢复 messages", "单次问答 → 无状态 API"],
+              ["用户偏好（语言、时区）", "经确认后写入 Store namespace", "偏好已在用户 profile 表 → 服务端注入上下文"],
+              ["长对话超 token", "摘要 + 保留最近 N 轮 + 任务锚点", "强行全量 history → 成本与漂移双爆"],
+              ["审批 / HITL 中断后继续", "LangGraph checkpoint 保存 pending 节点", "自研状态机 + DB 往往更清晰"],
+              ["跨设备「记住我」", "user 级 Store，与认证绑定", "模型从闲聊推断永久事实 → 禁止"],
+              ["多 Agent 协作", "共享 thread state 或受控 Store", "各 Agent 各写各的「记忆」→ 冲突难审计"],
+            ],
+          },
+          {
+            type: "paragraph",
+            text: "三问自检：状态是否必须跟 LangGraph 节点绑定？丢失一轮历史会不会导致资金或合规风险？用户是否有权查看与删除？若状态机在业务库已完备，记忆层只保留「对话呈现所需」的裁剪视图即可。",
           },
         ],
       },
@@ -1173,6 +1296,29 @@ const result = await agent.invoke({
 console.log(result.messages.at(-1)?.content);`,
             output: `预期回答包含 TypeScript。
 把第二次调用的 thread_id 改掉后，Agent 不应知道此前偏好。`,
+          },
+        ],
+      },
+      {
+        id: "memory-anti-pattern",
+        title: "反例：把模型闲聊当长期记忆写入",
+        blocks: [
+          {
+            type: "paragraph",
+            text: "反例是在 system prompt 里写「记住用户的一切」，并把每轮 assistant 的猜测都 `store.put` 到长期层：用户随口说「最近在学 Rust」，第二天就被推荐 Rust 岗位；用户纠正「只是看看」，旧条目却未失效。表现是跨 thread 污染、摘要把否定句压扁、HITL 中断后恢复到了错误分支。根因是读写记忆没有「观察 / 推断 / 已确认」分级，也没有 TTL 与删除 API。",
+          },
+          {
+            type: "bullets",
+            items: [
+              "坏做法：用模型生成的 userId，而非认证会话中的 subject。",
+              "坏做法：摘要 prompt 要求「压缩成一段话」却不保留未完成任务与数字约束。",
+              "坏做法：Checkpointer 与业务库各记一份订单状态，互不校验。",
+              "改法：长期记忆仅写入用户确认或产品显式「记住」；摘要后跑规则校验是否丢失日期与否定词。",
+            ],
+          },
+          {
+            type: "paragraph",
+            text: "调试记忆问题时要先问：是 thread 串了、checkpoint 没读到、还是 Store 键冲突？用两个 browser 会话换 thread_id 做对照实验，比反复调 temperature 有效得多。",
           },
         ],
       },
@@ -1211,6 +1357,50 @@ console.log(preference?.value);`,
             type: "paragraph",
             text: "记忆写入应比读取更保守。模型从一句“最近在看 Rust”推断“用户永久偏好 Rust”会造成长期污染。建议把候选记忆分为观察、推断和确认事实，只有用户明确表达或主动确认后才写入长期层；每条记录带来源消息、时间、置信度、过期策略和可见性。会话压缩时保留未完成任务、承诺、工具结果标识和关键约束，摘要生成后用规则检查是否丢失数字、日期与否定条件。涉及隐私时提供记忆列表、单条删除和全部清空。",
           },
+        ],
+      },
+      {
+        id: "memory-failure-interview",
+        title: "失败分类与面试追问",
+        blocks: [
+          {
+            type: "paragraph",
+            text: "记忆相关故障常表现为「它忘了」「它记错了」「换设备就没了」「中断后从头再来」。调试时区分会话层（Checkpointer）、长期层（Store）与业务真源（订单库），一次只验证一层，避免同时改摘要策略与 Postgres 连接串。",
+          },
+          {
+            type: "table",
+            headers: ["类别", "表现", "调试与修复"],
+            rows: [
+              ["threading", "A 用户看到 B 的对话", "thread_id 必须来自服务端；禁止客户端自选"],
+              ["checkpoint", "重启后状态丢失", "确认 Postgres setup、连接串与 graph 是否同一 checkpointer"],
+              ["summarization", "摘要后承诺的截止时间消失", "摘要后规则校验；保留 structured task 字段"],
+              ["store-write", "未确认偏好被永久保存", "分级写入；仅「确认事实」进长期层"],
+              ["store-read", "跨 thread 读不到偏好", "namespace 设计 [users, id, profile]；与认证绑定"],
+              ["token-budget", "静默截断早期工具结果", "显式预算策略；超限提示用户而非悄悄丢消息"],
+              ["hitl-resume", "中断恢复后重复执行副作用", "checkpoint 版本 + 幂等工具；见 lab-l05"],
+            ],
+          },
+          {
+            type: "table",
+            headers: ["追问", "答纲"],
+            rows: [
+              ["Checkpointer 和 Store 区别？", "前者保存图状态与同 thread 消息轨迹；后者跨 thread 的键值事实，需显式读写。"],
+              ["怎么做记忆可删除？", "产品层列表 + delete API；Store 按 key 删；合规场景支持全量清空。"],
+              ["摘要和裁剪哪个先？", "先定保留锚点（任务、约束、最近 N 轮），再摘要更早内容；不可逆操作前不摘要掉参数。"],
+              ["MemorySaver 能上线吗？", "仅本地开发；生产用 Postgres 等持久化 checkpointer。"],
+              ["前端如何展示记忆？", "区分「本轮上下文」与「已保存偏好」；编辑/删除入口，避免黑箱。"],
+            ],
+          },
+          {
+            type: "paragraph",
+            text: "面试讲「记忆调试」时，用 thread_id 对照实验 + Store 误写入举例：如何分级、如何绑认证用户、如何在 HITL 场景用 checkpoint 恢复而不重复扣款。能说明何时只用 Checkpointer、何时才需要 Store，比罗列 API 名更有深度。",
+          },
+          {
+            type: "callout",
+            tone: "note",
+            title: "动手 Lab：memory → lab-l05",
+            text: "站点章节 memory 与 examples/lab-l05-checkpoint-hitl/（章节 slug：lab-l05，站内路径 /chapter/lab-l05）对齐：练习 checkpoint 持久化、中断恢复与 HITL 不重复执行副作用。在子包目录执行 npm test 可验证状态机与测试用例，无需付费模型。完成本章 MemorySaver / Postgres 示例后，用 Lab 对照「恢复后 tool 是否被跳过」的断言。",
+          },
           {
             type: "checkpoint",
             title: "本章自检",
@@ -1219,6 +1409,8 @@ console.log(preference?.value);`,
               "进程重启后 PostgreSQL checkpoint 可恢复",
               "长期事实带来源与确认时间，用户可以删除",
               "超过 token 预算时会摘要或裁剪，而不是静默溢出",
+              "能口述两条「何时不用分层记忆」及替代方案",
+              "能根据失败分类表说明一次 thread / Store / 摘要相关调试",
             ],
           },
         ],
@@ -1235,6 +1427,7 @@ console.log(preference?.value);`,
     track: "状态编排",
     tags: ["Supervisor", "路由", "HITL"],
     relatedResources: ["langgraph-101-ts", "langchain-academy", "deeplearning-ai-agents-langgraph"],
+    relatedLabs: ["lab-l06"],
     duration: "120 分钟",
     level: "工程化",
     goal: "使用 LangGraph 构建 Supervisor 模式，并理解何时不该使用多 Agent。",
@@ -1260,7 +1453,44 @@ console.log(preference?.value);`,
           },
           {
             type: "paragraph",
-            text: "多 Agent 的价值是上下文与职责隔离，而不是制造一群角色聊天。Researcher 只拥有只读搜索工具，Writer 只处理经过筛选的证据，Supervisor 负责路由和终止。每增加一个 Agent，都会增加模型调用、状态传递、故障面和评估难度；若两个角色共享同样工具和提示，它们很可能只是昂贵的重复。",
+            text: "多 Agent 的价值是上下文与职责隔离，而不是制造一群角色聊天。Researcher 只拥有只读搜索工具，Writer 只处理经过筛选的证据，Supervisor 负责路由和终止。每增加一个 Agent，都会增加模型调用、状态传递、故障面和评估难度；若两个角色共享同样工具和提示，它们很可能只是昂贵的重复。Supervisor 的路由输出应是有限枚举（researcher / writer / finish），而不是让模型自由拼接节点名——否则条件边无法静态审查，日志也无法回放。",
+          },
+        ],
+      },
+      {
+        id: "when-multi",
+        title: "何时用多 Agent，何时不用",
+        blocks: [
+          {
+            type: "paragraph",
+            text: "「何时用」：不同子任务需要不同的工具权限、系统提示或上下文窗口策略，且单 Agent 的 system prompt 已经臃肿到频繁串台。「何时不用」：流程是固定 DAG（审批三步走）、所有步骤共享同一工具集、或你只是想“让回答看起来更专业”——此时应先换模型、压缩上下文、加评估，而不是再 spawn 一个“专家”。多 Agent 是组织边界在软件里的投影，不是银弹。",
+          },
+          {
+            type: "table",
+            headers: ["场景", "何时用", "何时不用", "代价"],
+            rows: [
+              ["只读研究 + 受限写作", "Researcher 无写权限，Writer 无外网", "单 Agent + 两段 prompt", "多一轮 supervisor 调用"],
+              ["不同敏感工具隔离", "Worker 白名单互斥", "同一 Agent 挂全部工具", "路由错误 = 越权调用"],
+              ["可并行子任务", "Send/并行节点 + reducer", "顺序聊天式“专家们讨论”", "合并冲突与成本翻倍"],
+              ["固定审批流", "普通 StateGraph 即可", "给每步造一个 Agent 人格", "评估与调试复杂度暴涨"],
+              ["长文档分块处理", "Map-reduce 子图", "五个 Agent 互相转发全文", "上下文在 handoff 中膨胀"],
+            ],
+          },
+        ],
+      },
+      {
+        id: "anti-multi",
+        title: "反例：一群 Agent 在群里吵架",
+        blocks: [
+          {
+            type: "callout",
+            tone: "warning",
+            title: "反例（不要模仿）",
+            text: "五个“专家” Agent 在共享 channel 里轮流发言，没有显式 finish 条件，Supervisor 每轮都选“继续讨论”；Researcher 与 Writer 拥有相同工具；日志里只有自然语言，无法还原路由枚举。用户等了一分钟、花了五倍 token，得到与单 Agent 差不多的摘要，还偶发循环直到 recursionLimit 硬断。",
+          },
+          {
+            type: "paragraph",
+            text: "反例把多 Agent 当成角色扮演，丢失了图编排的核心：有限状态、可重放节点、最小权限 Worker。Lab L06 用 intent 路由到两个 Worker，并在调用前校验 tool 白名单——用测试证明越权会被拒绝，而不是靠 prompt 祈祷。",
           },
         ],
       },
@@ -1330,6 +1560,19 @@ console.log(result.messages.at(-1)?.content);`,
             output: `预期节点路径类似 supervisor → researcher → supervisor → writer → supervisor → END。
 若不断循环，优先修 supervisor 的终止协议，并保留 recursionLimit。`,
           },
+          {
+            type: "code",
+            language: "typescript",
+            filename: "examples/lab-l06-supervisor/src/supervisor.ts",
+            code: `/** Lab: route(intent) → worker A|B; reject unknown; tool whitelist per worker. */
+export function run(intent: Intent, toolName: string): RunResult {
+  const routeResult = route(intent);
+  if ("reject" in routeResult && routeResult.reject) return { status: "rejected", reason: routeResult.reason };
+  if (!isToolAllowed(routeResult.worker, toolName)) return { status: "forbidden", worker: routeResult.worker, toolName };
+  // invoke worker tool...
+}`,
+            caption: "Lab L06 用确定性路由 + 白名单替代“五个专家聊天”，便于单测与权限审计。",
+          },
         ],
       },
       {
@@ -1352,14 +1595,76 @@ console.log(result.messages.at(-1)?.content);`,
             type: "paragraph",
             text: "状态图的设计应让每个节点可以独立重放。节点输入来自显式 State，输出只返回需要更新的字段，不通过隐藏全局变量通信；条件边返回有限枚举，避免模型直接拼接节点名。并行 Worker 要为结果定义 reducer，同时设并发上限和部分失败策略。Supervisor 的路由决策也要进入 trace，至少记录选择、公开理由和剩余预算。多 Agent 评估不仅看最终质量，还要统计平均轮数、重复工作率、Worker 交接损失和单任务成本。",
           },
+        ],
+      },
+      {
+        id: "multi-failures",
+        title: "多 Agent 失败分类与调试",
+        blocks: [
+          {
+            type: "paragraph",
+            text: "多 Agent 系统的「失败」往往在路由、 handoff 与权限三层叠加。调试时先区分：是 Supervisor 永不 finish（循环）？是 Worker 越权调了工具？还是并行 reducer 把两个 Worker 的结果盖掉了？不要只靠调低 temperature——先让日志能还原每一跳的枚举路由与 state diff。",
+          },
+          {
+            type: "table",
+            headers: ["failure_class", "现象", "调试与修复"],
+            rows: [
+              ["route_loop", "recursionLimit 耗尽", "显式 finish 协议；最大轮数；supervisor 输出结构化 route"],
+              ["tool_bleed", "Writer 调了搜索 API", "Worker 白名单；Lab L06 forbidden 路径单测"],
+              ["handoff_loss", "最终答案缺研究结果", "state reducer 合并 messages；handoff 契约文档化"],
+              ["parallel_race", "部分 Worker 结果丢失", "reducer 定义冲突策略；限制并发"],
+              ["cost_spike", "单问 20+ 次模型调用", "路由 trace 审计；合并重复 researcher 轮"],
+              ["opaque_trace", "无法回答“为何选了 Writer”", "记录 route.next + instruction 摘要到 trace"],
+            ],
+          },
+          {
+            type: "callout",
+            tone: "note",
+            title: "调试习惯",
+            text: "导出一次 invoke 的节点序列（含 conditional edge 取值），与预期路径 diff。面试提到“多 Agent 跑飞了”时，说出 route_loop / tool_bleed 分类 + recursionLimit 与 finish 协议，比只说“加了个 Supervisor prompt”更工程化。",
+          },
+        ],
+      },
+      {
+        id: "interview-multi",
+        title: "面试常问：多 Agent 与 Supervisor",
+        blocks: [
+          {
+            type: "table",
+            headers: ["追问", "答纲要点"],
+            rows: [
+              ["什么时候不该上多 Agent？", "固定 DAG、同工具集、仅为“显得专业”；先评估单 Agent + 工具约束。"],
+              ["Supervisor 和 router 函数有何不同？", "Supervisor 可用 LLM 结构化输出枚举；纯 router 可用规则；后者更可测。"],
+              ["如何防止 Worker 越权？", "每 Worker 工具白名单；调用前校验；拒绝路径进 trace。"],
+              ["并行 Worker 结果怎么合并？", "Annotation reducer；定义冲突策略；限制并发与超时。"],
+              ["如何评估多 Agent？", "质量 + 平均轮数 + handoff 损失 + 成本；不只盯最终答案。"],
+            ],
+          },
+          {
+            type: "paragraph",
+            text: "面试常把多 Agent 和 HITL、工具调用放在一起问：高风险动作仍应 interrupt，而不是让“财务专家 Agent”自行转账。能说清「何时用 / 何时不用」、并举 Lab L06 白名单拒绝用例，就表明你理解的是权限边界而非角色 cosplay。",
+          },
+        ],
+      },
+      {
+        id: "lab-multi",
+        title: "动手验证",
+        blocks: [
+          {
+            type: "callout",
+            tone: "success",
+            title: "配套 Lab L06",
+            text: "仓库路径 examples/lab-l06-supervisor：实现 intent 路由、双 Worker 最小工具白名单与 unknown 拒答。站点章节 /chapter/lab-l06 与本课 Supervisor 图对照跑 vitest，再把 route/run 模式嵌入你的 LangGraph 子图。",
+          },
           {
             type: "checkpoint",
-            title: "本章自检",
+            title: "上岗自检（多 Agent）",
             criteria: [
-              "能从日志还原每个节点输入、输出和路由",
-              "Worker 只拥有完成职责所需的最小工具集",
-              "Supervisor 有显式 finish 协议和递归上限",
-              "能说明用单 Agent 替代当前设计会失去什么",
+              "能说明「何时用 / 何时不用」多 Agent，并指出“专家群聊”反例",
+              "能从日志还原每个节点输入、输出和路由枚举",
+              "Worker 只拥有完成职责所需的最小工具集，且越权可测",
+              "Supervisor 有显式 finish 协议和 recursionLimit",
+              "失败能归类 route_loop / tool_bleed 等，并能根据面试表讲清评估维度",
             ],
           },
         ],
