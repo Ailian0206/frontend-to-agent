@@ -1941,6 +1941,12 @@ export function useAgentChat(threadId: string) {
         title: "需求与验收标准",
         blocks: [
           {
+            type: "callout",
+            tone: "note",
+            title: "M5 作品集验收（knowledge-agent）",
+            text: "仓库 examples/knowledge-agent 已对齐毕业验收：含 HITL 确认路径、离线评估集（≥30 条）、demo-paths 演示脚本，以及与 eval-security 同源的 guardrail。本站 /graduate 勾选 S1–S11 后，用该示例做最终答辩演示。",
+          },
+          {
             type: "bullets",
             items: [
               "读取 knowledge/ 下 Markdown，切块后写入 Qdrant。",

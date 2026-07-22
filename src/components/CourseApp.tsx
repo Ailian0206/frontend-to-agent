@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   CodeXml,
   ExternalLink,
+  GraduationCap,
   Library,
   Link2,
   Menu,
@@ -134,6 +135,7 @@ export function CourseApp({
   );
   const resourcesActive = pathname.startsWith("/resources");
   const skillsActive = pathname.startsWith("/skills");
+  const graduateActive = pathname.startsWith("/graduate");
 
   // Close overlays after the router has accepted navigation (do not sync-close in click handlers).
   function scheduleCloseOverlays(): void {
@@ -288,7 +290,11 @@ export function CourseApp({
               ? `${String(activeChapter.number).padStart(2, "0")} / ${chapters.length}`
               : skillsActive
                 ? "能力地图"
-                : "资源库"}
+                : graduateActive
+                  ? "毕业验收"
+                  : resourcesActive
+                    ? "资源库"
+                    : "课程"}
           </span>
         </div>
         <button className="icon-button" type="button" onClick={openSearch} aria-label="搜索课程" title="搜索课程">
@@ -370,6 +376,14 @@ export function CourseApp({
             onClick={scheduleCloseOverlays}
           >
             <BookOpen size={17} />能力地图
+          </Link>
+          <Link
+            className={`github-link ${graduateActive ? "active" : ""}`}
+            href="/graduate"
+            aria-current={graduateActive ? "page" : undefined}
+            onClick={scheduleCloseOverlays}
+          >
+            <GraduationCap size={17} />毕业验收
           </Link>
           <Link
             className={`github-link ${resourcesActive ? "active" : ""}`}
@@ -468,7 +482,9 @@ export function CourseApp({
             <p>
               {skillsActive
                 ? "这里是岗位能力地图。每条能力对应课程与 Lab；从左侧进入章节继续学习。"
-                : "这里是公开资源库。从左侧进入任意章节继续学习；资源链接在新标签页打开原文。"}
+                : graduateActive
+                  ? "毕业验收清单：勾选 S1–S11 自检项，并沿链接复习课程与 Lab；作品集见 Capstone 与 examples/knowledge-agent。"
+                  : "这里是公开资源库。从左侧进入任意章节继续学习；资源链接在新标签页打开原文。"}
             </p>
           </div>
         </aside>
