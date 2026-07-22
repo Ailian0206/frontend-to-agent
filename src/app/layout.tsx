@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(siteRoot),
   title: "Frontend to Agent | 资深前端 AI Agent 转型教程",
-  description: "面向 10 年以上前端工程师的 Node.js、TypeScript、LangChain.js 与 LangGraph.js 系统教程，含 MCP、HITL、评估与公开资源库。",
+  description: "面向前端工程师的 Node.js、TypeScript、LangChain.js 与 LangGraph.js 系统教程，含 MCP、HITL、评估与公开资源库。",
   openGraph: {
     type: "website",
     siteName: "Frontend to Agent",
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary",
     title: "Frontend to Agent",
-    description: "面向资深前端工程师的 AI Agent 系统教程与公开资源库。",
+    description: "面向前端工程师的 AI Agent 系统教程与公开资源库。",
   },
 };
 
