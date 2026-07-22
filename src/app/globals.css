@@ -1354,8 +1354,15 @@ tbody tr:hover td {
   opacity: 0.88;
 }
 
+.chapter-nav-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
 .coming-soon-badge {
-  margin-left: auto;
+  flex: 0 0 auto;
   padding: 1px 5px;
   border: 1px solid var(--line);
   border-radius: 3px;
@@ -1365,10 +1372,6 @@ tbody tr:hover td {
   font-style: normal;
   font-weight: 700;
   letter-spacing: 0.04em;
-}
-
-.course-nav a {
-  gap: 8px;
 }
 
 .skill-badge-row {

@@ -336,8 +336,10 @@ export function CourseApp({
                         <span className={`chapter-state ${done ? "done" : ""}`}>
                           {done ? <Check size={12} /> : String(chapter.number).padStart(2, "0")}
                         </span>
-                        <span>{chapter.shortTitle}</span>
-                        {chapter.comingSoon ? <em className="coming-soon-badge">即将</em> : null}
+                        <span className="chapter-nav-title">
+                          {chapter.shortTitle}
+                          {chapter.comingSoon ? <em className="coming-soon-badge">即将</em> : null}
+                        </span>
                       </Link>
                     </li>
                   );
