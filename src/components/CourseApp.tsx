@@ -232,7 +232,8 @@ export function CourseApp({
   function selectCurriculum(next: CurriculumId): void {
     persistCurriculum(next);
     setExpandedKinds(activeChapter?.curriculum === next && activeChapter ? [activeChapter.kind] : ["lesson"]);
-    if (activeChapter?.curriculum === next) return;
+    // Use activeCurriculum (not activeChapter) so shell pages like /skills don't force-navigate.
+    if (activeCurriculum === next) return;
     const first = filterChaptersByCurriculum(chapters, next)[0];
     if (first) {
       router.push(chapterHref(first.slug));

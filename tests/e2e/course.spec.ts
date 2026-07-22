@@ -126,13 +126,15 @@ test("switches top-level curriculum and collapses kind groups", async ({ page },
   await expect(page.getByRole("navigation", { name: "课程章节" }).getByRole("link", { name: /为什么转型 Agent/ })).toHaveCount(0);
 });
 
-test("opens skills map", async ({ page }) => {
+test("keeps shell pages when re-clicking the active curriculum tab", async ({ page }) => {
   await page.goto("/skills/");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("能力地图");
-  const main = page.locator("main");
-  await expect(main.getByRole("heading", { name: /S1/ }).first()).toBeVisible();
-  await expect(main.getByRole("heading", { name: /E1/ }).first()).toBeVisible();
-  await expect(page.getByRole("button", { name: "标记本章完成" })).toHaveCount(0);
+  const openMenu = page.getByRole("button", { name: "打开课程目录" });
+  if (await openMenu.isVisible()) await openMenu.click();
+  await expect(page.getByRole("tab", { name: "AI Agent" })).toHaveAttribute("aria-selected", "true");
+  await page.getByRole("tab", { name: "AI Agent" }).click();
+  await expect(page).toHaveURL(/\/skills\/?$/);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("能力地图");
 });
 
 test("opens graduate checklist without seniority copy", async ({ page }) => {
