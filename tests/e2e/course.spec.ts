@@ -177,3 +177,21 @@ test("opens shipped lab L07 and elective E1", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1 })).toContainText("网关");
   await expect(page.getByText("本实验将在后续里程碑提供可运行仓库")).toHaveCount(0);
 });
+
+test("searches production platforms and renders annotated screenshots", async ({ page }) => {
+  await page.goto("/chapter/vercel-core-operations/");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("P03 Vercel");
+  await expect(page.getByRole("figure", { name: /Deployments 列表/ }).first()).toBeVisible();
+  await expect(page.getByText("记录于 2026-07-22").first()).toBeVisible();
+
+  await page.getByRole("button", { name: "搜索课程" }).first().click();
+  await page.getByRole("textbox", { name: "搜索关键词" }).fill("Replay");
+  await expect(page.getByRole("dialog").getByRole("link", { name: /Inngest/ }).first()).toBeVisible();
+});
+
+test("keeps production screenshots within the viewport", async ({ page }) => {
+  await page.goto("/chapter/supabase-auth-rls-recovery/");
+  await page.locator(".annotated-screenshot").first().scrollIntoViewIfNeeded();
+  await expect(page.locator(".annotated-screenshot img").first()).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+});
