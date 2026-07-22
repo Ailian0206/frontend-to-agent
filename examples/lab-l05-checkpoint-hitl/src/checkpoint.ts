@@ -5,6 +5,11 @@ export type CheckpointRecord<T> = {
   state: T;
 };
 
+/** Snapshot state so callers cannot mutate history by reference. */
+function cloneState<T>(state: T): T {
+  return structuredClone(state);
+}
+
 /**
  * In-memory checkpoint store for agent thread state (S6).
  * Each save appends a new version; load without version returns the latest.
@@ -12,18 +17,18 @@ export type CheckpointRecord<T> = {
 export class MemoryCheckpointStore<T = unknown> {
   private readonly threads = new Map<string, CheckpointRecord<T>[]>();
 
-  /** Persist state and return the new version metadata. */
+  /** Persist a cloned snapshot and return the new version metadata. */
   save(threadId: string, state: T): CheckpointRecord<T> {
     const history = this.threads.get(threadId) ?? [];
     const version = history.length + 1;
     const record: CheckpointRecord<T> = {
       version,
       savedAt: new Date().toISOString(),
-      state,
+      state: cloneState(state),
     };
     history.push(record);
     this.threads.set(threadId, history);
-    return record;
+    return { ...record, state: cloneState(record.state) };
   }
 
   /**
@@ -36,14 +41,17 @@ export class MemoryCheckpointStore<T = unknown> {
       return null;
     }
     if (version === undefined) {
-      return history[history.length - 1]!.state;
+      return cloneState(history[history.length - 1]!.state);
     }
     const match = history.find((entry) => entry.version === version);
-    return match?.state ?? null;
+    return match ? cloneState(match.state) : null;
   }
 
-  /** List all versions for a thread (oldest first). */
+  /** List all versions for a thread (oldest first), with cloned states. */
   listVersions(threadId: string): CheckpointRecord<T>[] {
-    return [...(this.threads.get(threadId) ?? [])];
+    return (this.threads.get(threadId) ?? []).map((entry) => ({
+      ...entry,
+      state: cloneState(entry.state),
+    }));
   }
 }

@@ -39,4 +39,15 @@ describe("MemoryCheckpointStore", () => {
     expect(versions[1]?.state).toBe(20);
     expect(versions[0]!.savedAt <= versions[1]!.savedAt).toBe(true);
   });
+
+  it("isolates snapshots from caller mutations after save", () => {
+    const store = new MemoryCheckpointStore<{ step: number; note: string }>();
+    const draft = { step: 1, note: "a" };
+    store.save("thread-iso", draft);
+    draft.step = 99;
+    draft.note = "mutated";
+
+    expect(store.load("thread-iso")).toEqual({ step: 1, note: "a" });
+    expect(store.load("thread-iso", 1)).toEqual({ step: 1, note: "a" });
+  });
 });
