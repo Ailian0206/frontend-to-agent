@@ -48,9 +48,9 @@ describe("course content", () => {
   });
 
   it("contains the expanded curriculum with labs and electives in sequence", () => {
-    expect(chapters).toHaveLength(33);
+    expect(chapters).toHaveLength(35);
     expect(chapters.map((chapter) => chapter.number)).toEqual(
-      Array.from({ length: 33 }, (_, index) => index + 1),
+      Array.from({ length: 35 }, (_, index) => index + 1),
     );
     expect(chapters.slice(0, 14).map((chapter) => chapter.slug)).toEqual([
       "why-agent",
@@ -91,7 +91,7 @@ describe("course content", () => {
 
   it("assigns agent curriculum by default and isolates production-ops", () => {
     expect(chapters.filter((chapter) => chapter.curriculum === "agent")).toHaveLength(29);
-    expect(chapters.filter((chapter) => chapter.curriculum === "production-ops")).toHaveLength(4);
+    expect(chapters.filter((chapter) => chapter.curriculum === "production-ops")).toHaveLength(6);
   });
 
   it("filters and groups chapters by curriculum for the dual-course sidebar", () => {
@@ -99,7 +99,7 @@ describe("course content", () => {
     const agentOnly = filterChaptersByCurriculum(chapterSummaries, "agent");
     const productionOnly = filterChaptersByCurriculum(chapterSummaries, "production-ops");
     expect(agentOnly).toHaveLength(29);
-    expect(productionOnly).toHaveLength(4);
+    expect(productionOnly).toHaveLength(6);
     expect(groupChaptersByKind(agentOnly).map((group) => group.label)).toEqual([
       "课程",
       "实验",
@@ -117,7 +117,7 @@ describe("course content", () => {
     expect(chapters.filter((chapter) => chapter.comingSoon)).toEqual([]);
   });
 
-  it("ships P01-P04 as ordered production-ops lessons", () => {
+  it("ships P01-P06 as ordered production-ops lessons", () => {
     const productionOps = chapters.filter((chapter) => chapter.curriculum === "production-ops");
 
     expect(productionOps.map((chapter) => chapter.slug)).toEqual([
@@ -125,6 +125,8 @@ describe("course content", () => {
       "production-inspection-rhythm",
       "vercel-core-operations",
       "vercel-release-observability",
+      "supabase-database-migrations",
+      "supabase-auth-rls-recovery",
     ]);
     expect(productionOps.every((chapter) => chapter.kind === "lesson")).toBe(true);
     expect(productionOps.every((chapter) => chapter.track === "工程上线")).toBe(true);
@@ -151,13 +153,15 @@ describe("course content", () => {
     }
   });
 
-  it("ships complete Vercel platform lessons with screenshots and official resources", () => {
+  it("ships complete platform lessons with screenshots and official resources", () => {
     const productionOps = chapters.filter((chapter) => chapter.curriculum === "production-ops");
     const platformLessons = productionOps.slice(2);
 
     expect(platformLessons.map((chapter) => chapter.slug)).toEqual([
       "vercel-core-operations",
       "vercel-release-observability",
+      "supabase-database-migrations",
+      "supabase-auth-rls-recovery",
     ]);
 
     for (const chapter of platformLessons) {
