@@ -1311,7 +1311,7 @@ export function useAgentChat(threadId: string) {
   },
   {
     slug: "capstone",
-    kind: "lesson",
+    kind: "capstone",
     skills: ["S5","S10","S11"],
     title: "最终实战：个人知识库问答 Agent",
     shortTitle: "最终实战项目",

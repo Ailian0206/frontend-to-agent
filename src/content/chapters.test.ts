@@ -37,12 +37,12 @@ describe("course content", () => {
     }
   });
 
-  it("contains the expanded 16-chapter curriculum in sequence", () => {
-    expect(chapters).toHaveLength(16);
-    expect(chapters.map((chapter) => chapter.number)).toEqual([
-      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
-    ]);
-    expect(chapters.map((chapter) => chapter.slug)).toEqual([
+  it("contains the expanded curriculum with labs and electives in sequence", () => {
+    expect(chapters).toHaveLength(29);
+    expect(chapters.map((chapter) => chapter.number)).toEqual(
+      Array.from({ length: 29 }, (_, index) => index + 1),
+    );
+    expect(chapters.slice(0, 14).map((chapter) => chapter.slug)).toEqual([
       "why-agent",
       "core-concepts",
       "stack-setup",
@@ -57,9 +57,35 @@ describe("course content", () => {
       "mcp-protocol",
       "deploy-observe",
       "eval-security",
-      "capstone",
-      "roadmap",
     ]);
+    expect(chapters.filter((chapter) => chapter.kind === "lab").map((chapter) => chapter.slug)).toEqual([
+      "lab-l01",
+      "lab-l02",
+      "lab-l03",
+      "lab-l04",
+      "lab-l05",
+      "lab-l06",
+      "lab-l07",
+      "lab-l08",
+    ]);
+    expect(chapters.filter((chapter) => chapter.kind === "elective").map((chapter) => chapter.slug)).toEqual([
+      "elective-e1",
+      "elective-e2",
+      "elective-e3",
+      "elective-e4",
+      "elective-e5",
+    ]);
+    expect(chapters.at(-2)?.slug).toBe("capstone");
+    expect(chapters.at(-2)?.kind).toBe("capstone");
+    expect(chapters.at(-1)?.slug).toBe("roadmap");
+  });
+
+  it("exposes lab, elective, and capstone placeholders for navigation", () => {
+    const kinds = new Set(chapters.map((chapter) => chapter.kind));
+    expect(kinds.has("lab")).toBe(true);
+    expect(kinds.has("elective")).toBe(true);
+    expect(kinds.has("capstone")).toBe(true);
+    expect(chapters.filter((chapter) => chapter.comingSoon).length).toBeGreaterThanOrEqual(8);
   });
 
   it("assigns every chapter to a known learning track with tags", () => {
@@ -70,13 +96,16 @@ describe("course content", () => {
   });
 
   it("contains diagrams, runnable code, and checkpoints across core chapters", () => {
-    const blocks = chapters.flatMap((chapter) => chapter.sections.flatMap((section) => section.blocks));
+    const lessonChapters = chapters.filter((chapter) => chapter.kind === "lesson" || chapter.kind === "capstone");
+    const blocks = lessonChapters.flatMap((chapter) =>
+      chapter.sections.flatMap((section) => section.blocks),
+    );
     expect(blocks.filter((block) => block.type === "diagram").length).toBeGreaterThanOrEqual(5);
     expect(blocks.filter((block) => block.type === "code").length).toBeGreaterThanOrEqual(14);
     expect(blocks.filter((block) => block.type === "resources").length).toBeGreaterThanOrEqual(4);
     expect(
-      chapters
-        .slice(2, 15)
+      lessonChapters
+        .filter((chapter) => !["why-agent", "core-concepts", "roadmap"].includes(chapter.slug))
         .every((chapter) =>
           chapter.sections.some((section) => section.blocks.some((block) => block.type === "checkpoint")),
         ),

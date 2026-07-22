@@ -1,4 +1,5 @@
 import { baseChapters } from "../chapters.base";
+import { electivePlaceholders, labPlaceholders } from "../placeholders";
 import type { Chapter } from "../types";
 import { evalSecurityChapter } from "./eval-security";
 import { hitlChapter } from "./human-in-the-loop";
@@ -7,10 +8,10 @@ import { promptStructuredChapter } from "./prompt-structured";
 import { streamingUiChapter } from "./streaming-ui";
 
 /**
- * Assemble the full curriculum: original 11 chapters plus public-curriculum gaps.
- * Order follows a senior-frontend learning path (prompt → tools → stream → knowledge → HITL → MCP → eval).
+ * Assemble curriculum layers: lessons → labs → electives → capstone → roadmap.
+ * Lab/elective entries are navigation stubs until later milestones.
  */
-const orderedWithoutNumbers: Omit<Chapter, "number">[] = [
+const lessonChapters: Omit<Chapter, "number">[] = [
   baseChapters[0], // why-agent
   baseChapters[1], // core-concepts
   baseChapters[2], // stack-setup
@@ -25,6 +26,12 @@ const orderedWithoutNumbers: Omit<Chapter, "number">[] = [
   mcpChapter,
   baseChapters[8], // deploy-observe
   evalSecurityChapter,
+];
+
+const orderedWithoutNumbers: Omit<Chapter, "number">[] = [
+  ...lessonChapters,
+  ...labPlaceholders,
+  ...electivePlaceholders,
   baseChapters[9], // capstone
   baseChapters[10], // roadmap
 ];
@@ -77,6 +84,8 @@ export function searchChapters(query: string): Chapter[] {
       chapter.goal,
       chapter.phase,
       chapter.track,
+      chapter.kind,
+      ...chapter.skills,
       ...chapter.tags,
       ...chapter.terms,
       ...(chapter.dependencies ?? []),
