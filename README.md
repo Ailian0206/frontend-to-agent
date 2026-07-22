@@ -35,7 +35,7 @@ GitHub Pages 部署完成后访问：
 - 作品集：`examples/knowledge-agent`（HITL、离线评估≥30、护栏、演示路径）
 - 毕业验收页：`/graduate`
 
-## Labs（M2–M4）
+## Labs 与作品集（M2–M5）
 
 | Lab | 能力 | 目录 |
 |---|---|---|
