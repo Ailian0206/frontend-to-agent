@@ -15,13 +15,6 @@ export type ResourceKind = "github" | "docs" | "course" | "article" | "video";
 /** Content layer for sidebar grouping: lesson / lab / elective / capstone. */
 export type ContentKind = "lesson" | "lab" | "elective" | "capstone";
 
-export type ChapterSeriesId = "production-ops";
-
-export interface ChapterSeriesRef {
-  id: ChapterSeriesId;
-  order: number;
-}
-
 export interface ScreenshotLegendItem {
   label: string;
   title: string;
@@ -111,8 +104,6 @@ export interface Chapter {
   tags: string[];
   /** Content layer used for left-nav grouping. */
   kind: ContentKind;
-  /** Optional series used for secondary lesson navigation. */
-  series?: ChapterSeriesRef;
   /** Linked entries from the skill map (S1–S11 / E1–E5). */
   skills: SkillId[];
   /** Lab chapter slugs that prove skills taught in this lesson. */

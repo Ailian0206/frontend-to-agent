@@ -4,7 +4,7 @@
 
 **Goal:** 在现有三栏学习工作台中交付 14 课“生产部署与运维”专题，以中文解释 Vercel、Supabase、Inngest、Sentry 的日常操作，并用 24 张脱敏控制台截图和 `evidence-graph` 只读案例完成可验证教学。
 
-**Architecture:** 继续使用 `Chapter` 与 `ContentBlock` 结构化内容链，在 `Chapter` 上增加可选专题引用，在 `ContentBlock` 上增加语义化截图块；课程按 overview、四个平台和 operations 六个文件拆分。导航仍先按内容形态分组，仅在 lesson 内增加“Agent 工程主线 / 生产部署与运维”二级组；路由、进度和 sitemap 继续使用全局章节序列。
+**Architecture:** 继续使用 `Chapter` 与 `ContentBlock` 结构化内容链，在 `ContentBlock` 上增加语义化截图块；课程按 overview、四个平台和 operations 六个文件拆分。顶层课程归属和切换器复用 `feat/sidebar-dual-curriculum` 提供的 `curriculum: "agent" | "production-ops"` 契约，生产课程内顺序派生 P01-P14 编号。路由继续使用 `/chapter/[slug]`，搜索、进度和相邻章节按当前课程过滤。
 
 **Tech Stack:** Next.js 16.2 App Router、React 19、strict TypeScript、Next Image（静态导出关闭运行时优化）、Vitest + Testing Library、Playwright、WebP 静态图片。
 
@@ -18,9 +18,9 @@
 
 | File | Responsibility |
 | --- | --- |
-| `src/content/types.ts` | 专题引用和 `screenshot` 内容块契约 |
-| `src/content/taxonomy.ts` | `production-ops` 专题名称、视觉前缀和排序 |
-| `src/content/course-index.ts` | 摘要携带专题信息，生成二级导航分组 |
+| `src/content/types.ts` | `screenshot` 内容块契约；合并后消费既有 `CurriculumId` |
+| `src/content/curricula.ts` | 双课程名称与默认课程（菜单里程碑提供，本计划只消费） |
+| `src/content/course-index.ts` | 截图图例全文搜索；合并后消费课程过滤结果 |
 | `src/content/chapters/index.ts` | 装配 P01-P14，并把截图图例纳入全文搜索 |
 | `src/content/chapters/production-ops/overview.ts` | P01-P02 生产系统地图与巡检节奏 |
 | `src/content/chapters/production-ops/vercel.ts` | P03-P04 Vercel 教程 |
@@ -31,34 +31,29 @@
 | `src/content/chapters/production-ops/index.ts` | 按 P01-P14 导出专题课程并断言顺序 |
 | `src/components/AnnotatedScreenshot.tsx` | 语义化图片、真实/示意标记、记录日期、图例和来源 |
 | `src/components/ContentRenderer.tsx` | 分派 `screenshot` 内容块 |
-| `src/components/CourseApp.tsx` | lesson 二级分组和 P01-P14 导航编号 |
-| `src/components/CoursePage.tsx` | 章节标题区显示专题编号 |
-| `src/app/globals.css` | 专题导航和截图响应式样式 |
+| `src/app/globals.css` | 截图响应式样式；不改菜单样式 |
 | `src/content/resources.ts` | 四个平台当前官方文档目录 |
 | `public/course/production-ops/{platform}/*.webp` | 24 张脱敏、标注、压缩后的最终截图 |
 | `src/content/chapters.test.ts` | 专题、内容、图片、资源、搜索与顺序契约 |
 | `src/components/AnnotatedScreenshot.test.tsx` | 截图语义与路径测试 |
-| `tests/e2e/course.spec.ts` | 二级导航、搜索、深链、图片和移动端行为 |
+| `tests/e2e/course.spec.ts` | 合并菜单里程碑后验证课程切换、搜索、深链、图片和移动端行为 |
 | `README.md` | 课程总量和生产运维专题说明 |
 
 ---
 
-### Task 1: 建立专题与截图内容契约
+### Task 1: 建立截图内容契约
 
 **Files:**
 - Modify: `src/content/types.ts`
-- Modify: `src/content/taxonomy.ts`
-- Modify: `src/content/course-index.ts`
 - Modify: `src/content/chapters/index.ts`
 - Modify: `src/content/chapters.test.ts`
 
-- [x] **Step 1: 先写专题分组和截图搜索 RED 测试**
+- [x] **Step 1: 先写截图搜索 RED 测试**
 
-在 `src/content/chapters.test.ts` 增加最小合成章节，断言专题元数据进入摘要、导航组和搜索文本：
+在 `src/content/chapters.test.ts` 增加最小截图块，断言标题、替代文字、图例和来源都进入搜索文本：
 
 ```ts
-import { groupChaptersByKind, summarizeChapter } from "./course-index";
-import type { Chapter, ContentBlock } from "./types";
+import type { ContentBlock } from "./types";
 
 const screenshot: ContentBlock = {
   type: "screenshot",
@@ -75,17 +70,6 @@ const screenshot: ContentBlock = {
   sourceUrl: "https://vercel.com/docs/deployments",
 };
 
-it("carries production topic metadata into summaries and navigation", () => {
-  const chapter = {
-    ...chapters[0],
-    slug: "production-test",
-    series: { id: "production-ops", order: 1 },
-  } satisfies Chapter;
-  expect(summarizeChapter(chapter).series).toEqual({ id: "production-ops", order: 1 });
-  const lesson = groupChaptersByKind([summarizeChapter(chapter)])[0];
-  expect(lesson.subgroups?.[0]).toMatchObject({ id: "production-ops", label: "生产部署与运维" });
-});
-
 it("indexes screenshot title, alt text, legend, and source", () => {
   expect(blockSearchText(screenshot)).toContain("Status（状态） Ready");
   expect(blockSearchText(screenshot)).toContain("Vercel Deployments");
@@ -96,20 +80,13 @@ it("indexes screenshot title, alt text, legend, and source", () => {
 
 Run: `PATH=$HOME/.nvm/versions/node/v22.22.1/bin:$PATH npm test -- src/content/chapters.test.ts`
 
-Expected: TypeScript/Vitest 因 `series`、`screenshot` 和 `subgroups` 尚不存在而失败。
+Expected: TypeScript/Vitest 因 `screenshot` 尚不存在而失败。
 
-- [x] **Step 3: 实现最小类型和专题目录**
+- [x] **Step 3: 实现最小截图类型**
 
 在 `src/content/types.ts` 增加：
 
 ```ts
-export type ChapterSeriesId = "production-ops";
-
-export interface ChapterSeriesRef {
-  id: ChapterSeriesId;
-  order: number;
-}
-
 export interface ScreenshotLegendItem {
   label: string;
   title: string;
@@ -130,43 +107,11 @@ export interface ScreenshotLegendItem {
     sourceUrl?: string;
   };
 
-// Add to Chapter.
-series?: ChapterSeriesRef;
 ```
 
-在 `src/content/taxonomy.ts` 增加唯一专题目录：
+- [x] **Step 4: 让全文搜索消费新契约**
 
-```ts
-export const chapterSeries = [
-  {
-    id: "production-ops" as const,
-    label: "生产部署与运维",
-    prefix: "P",
-    summary: "从生产系统地图到四平台日常运维与故障定位。",
-  },
-];
-```
-
-- [x] **Step 4: 让摘要、二级分组和搜索消费新契约**
-
-`ChapterSummary` 增加 `series?: ChapterSeriesRef`；`summarizeChapter` 原样传递。`KindChapterGroup` 增加以下可选结构：
-
-```ts
-export interface ChapterSubgroup {
-  id: "core-lessons" | ChapterSeriesId;
-  label: string;
-  chapters: ChapterSummary[];
-}
-
-export interface KindChapterGroup {
-  kind: ContentKind;
-  label: ContentKindLabel;
-  chapters: ChapterSummary[];
-  subgroups?: ChapterSubgroup[];
-}
-```
-
-lesson 分组先输出无 `series` 的“Agent 工程主线”，再按 `chapterSeries` 输出专题，并按 `series.order` 排序；lab/elective/capstone 保持原结构。`blockSearchText` 的新分支返回标题、替代文字、日期、图例和来源链接拼接文本。
+`blockSearchText` 的 `screenshot` 分支返回标题、替代文字、日期、图例和来源链接拼接文本。顶层课程归属和导航不在本任务实现；待 `feat/sidebar-dual-curriculum` 进入 `main` 后直接消费其 `CurriculumId`、`curricula` 和 `filterChaptersByCurriculum`。
 
 - [x] **Step 5: 验证 GREEN 并提交**
 
@@ -175,22 +120,19 @@ Run: `PATH=$HOME/.nvm/versions/node/v22.22.1/bin:$PATH npm test -- src/content/c
 Expected: PASS，现有 18 项内容契约无回归，新测试通过。
 
 ```bash
-git add src/content/types.ts src/content/taxonomy.ts src/content/course-index.ts src/content/chapters/index.ts src/content/chapters.test.ts
-git commit -m "feat(content): 建立生产运维专题与截图契约"
+git add src/content/types.ts src/content/chapters/index.ts src/content/chapters.test.ts
+git commit -m "feat(content): 建立标注截图内容契约"
 ```
 
-### Task 2: 渲染标注截图和专题二级导航
+### Task 2: 渲染标注截图
 
 **Files:**
 - Create: `src/components/AnnotatedScreenshot.tsx`
 - Create: `src/components/AnnotatedScreenshot.test.tsx`
 - Modify: `src/components/ContentRenderer.tsx`
-- Modify: `src/components/CourseApp.tsx`
-- Modify: `src/components/CoursePage.tsx`
 - Modify: `src/app/globals.css`
-- Modify: `tests/e2e/course.spec.ts`
 
-- [ ] **Step 1: 写截图语义 RED 测试**
+- [x] **Step 1: 写截图语义 RED 测试**
 
 ```tsx
 import { render, screen } from "@testing-library/react";
@@ -224,61 +166,33 @@ describe("AnnotatedScreenshot", () => {
 });
 ```
 
-- [ ] **Step 2: 运行测试确认 RED**
+- [x] **Step 2: 运行测试确认 RED**
 
 Run: `PATH=$HOME/.nvm/versions/node/v22.22.1/bin:$PATH npm test -- src/components/AnnotatedScreenshot.test.tsx`
 
 Expected: FAIL，组件模块尚不存在。
 
-- [ ] **Step 3: 实现语义化截图组件**
+- [x] **Step 3: 实现语义化截图组件**
 
 组件使用 `next/image`、`figure`、`figcaption` 和 `ol`。根据 `process.env.GITHUB_PAGES === "true"` 给图片 `src` 加 `/frontend-to-agent` 前缀，遵守 Next.js 16 `basePath` 图片要求；图片显式给出 width/height、`sizes="(max-width: 760px) 100vw, 820px"` 和 `style={{ width: "100%", height: "auto" }}`。`imageKind` 映射为“真实界面”或“示意图”，来源链接使用 `target="_blank" rel="noreferrer"`。
 
-- [ ] **Step 4: 接入渲染与专题导航**
+- [x] **Step 4: 接入内容渲染**
 
-`ContentRenderer` 的 `screenshot` 分支直接渲染 `<AnnotatedScreenshot {...block} />`。`CourseApp` 对存在 `subgroups` 的 lesson 组渲染 `.lesson-subgroup`；导航编号使用：
+`ContentRenderer` 的 `screenshot` 分支直接渲染 `<AnnotatedScreenshot {...block} />`。不修改 `CourseApp`、`CoursePage` 或菜单 E2E；课程切换、编号、进度和相邻章节统一由并行菜单里程碑提供。
 
-```ts
-function chapterDisplayNumber(chapter: ChapterSummary): string {
-  return chapter.series
-    ? `P${String(chapter.series.order).padStart(2, "0")}`
-    : String(chapter.number).padStart(2, "0");
-}
-```
+- [x] **Step 5: 增加紧凑、响应式样式**
 
-`CoursePage` 标题区同样显示 P 序号；全局上一章、下一章和进度算法保持不变。
+`.annotated-screenshot` 使用最大 5px 圆角、由图片尺寸生成固定 `aspect-ratio` 的容器、非卡片嵌套布局；图例采用两列网格，390px 下改为单列。长英文通过 `overflow-wrap: anywhere`。
 
-- [ ] **Step 5: 增加紧凑、响应式样式**
-
-`.annotated-screenshot` 使用最大 5px 圆角、固定 `aspect-ratio` 图片容器、非卡片嵌套布局；图例采用两列网格，390px 下改为单列。`.lesson-subgroup` 只增加分段标题和缩进，不把整个导航包成卡片。长英文通过 `overflow-wrap: anywhere`，不得扩大 240px 左栏宽度。
-
-- [ ] **Step 6: 写专题导航 E2E RED/GREEN**
-
-先增加以下断言并确认缺少 P01 链接时失败；Task 3 添加内容后再运行至 GREEN：
-
-```ts
-test("groups production operations lessons under a secondary nav", async ({ page }) => {
-  await page.goto("/chapter/deploy-observe/");
-  const openMenu = page.getByRole("button", { name: "打开课程目录" });
-  if (await openMenu.isVisible()) await openMenu.click();
-  await expect(page.getByText("Agent 工程主线", { exact: true })).toBeVisible();
-  await expect(page.getByText("生产部署与运维", { exact: true })).toBeVisible();
-  await expect(page.getByRole("link", { name: /P01.*托管生产系统地图/ })).toHaveAttribute(
-    "aria-current",
-    "page",
-  );
-});
-```
-
-- [ ] **Step 7: 验证组件 GREEN 并提交**
+- [x] **Step 6: 验证组件 GREEN 并提交**
 
 Run: `PATH=$HOME/.nvm/versions/node/v22.22.1/bin:$PATH npm test -- src/components/AnnotatedScreenshot.test.tsx src/content/chapters.test.ts`
 
 Expected: 组件和内容聚焦测试通过；专题 E2E 暂不运行，等待真实章节装配。
 
 ```bash
-git add src/components/AnnotatedScreenshot.tsx src/components/AnnotatedScreenshot.test.tsx src/components/ContentRenderer.tsx src/components/CourseApp.tsx src/components/CoursePage.tsx src/app/globals.css tests/e2e/course.spec.ts
-git commit -m "feat(ui): 渲染标注截图与专题导航"
+git add src/components/AnnotatedScreenshot.tsx src/components/AnnotatedScreenshot.test.tsx src/components/ContentRenderer.tsx src/app/globals.css
+git commit -m "feat(ui): 渲染生产课程标注截图"
 ```
 
 ### Task 3: 交付 P01-P02 和专题装配
@@ -286,24 +200,24 @@ git commit -m "feat(ui): 渲染标注截图与专题导航"
 **Files:**
 - Create: `src/content/chapters/production-ops/overview.ts`
 - Create: `src/content/chapters/production-ops/index.ts`
-- Modify: `src/content/chapters.base.ts`
+- Delete: `src/content/chapters/production-ops-stub.ts`
 - Modify: `src/content/chapters/index.ts`
 - Modify: `src/content/chapters.test.ts`
 
 - [ ] **Step 1: 写 P01-P02 顺序与内容 RED 测试**
 
 ```ts
-const productionOps = chapters.filter((chapter) => chapter.series?.id === "production-ops");
+const productionOps = chapters.filter((chapter) => chapter.curriculum === "production-ops");
 expect(productionOps.map((chapter) => chapter.slug)).toEqual([
-  "deploy-observe",
+  "production-ops-intro",
   "production-inspection-rhythm",
 ]);
-expect(productionOps.map((chapter) => chapter.series?.order)).toEqual([1, 2]);
 expect(productionOps.every((chapter) => chapter.kind === "lesson")).toBe(true);
 expect(productionOps.every((chapter) => chapter.track === "工程上线")).toBe(true);
 expect(productionOps.every((chapter) => !chapter.comingSoon)).toBe(true);
+expect(chapters.find((chapter) => chapter.slug === "deploy-observe")?.curriculum).toBe("agent");
 
-for (const slug of ["deploy-observe", "production-inspection-rhythm"]) {
+for (const slug of ["production-ops-intro", "production-inspection-rhythm"]) {
   const chapter = productionOps.find((item) => item.slug === slug)!;
   const text = chapter.sections.flatMap((section) => section.blocks).map(blockSearchText).join(" ");
   expect(text).toMatch(/只读|普通变更|高风险/);
@@ -325,7 +239,7 @@ P01 至少包含：浏览器→Vercel→Supabase/Auth→Inngest→Sentry Mermaid
 两个章节统一使用：
 
 ```ts
-series: { id: "production-ops", order: 1 }, // P02 uses order: 2
+curriculum: "production-ops",
 kind: "lesson",
 track: "工程上线",
 skills: ["S11", "E2", "E3", "E4"],
@@ -338,7 +252,7 @@ duration: "35–45 分钟",
 
 ```ts
 [
-  "deploy-observe",
+  "production-ops-intro",
   "production-inspection-rhythm",
   "vercel-core-operations",
   "vercel-release-observability",
@@ -355,7 +269,7 @@ duration: "35–45 分钟",
 ]
 ```
 
-删除 `chapters.base.ts` 中旧 `deploy-observe` 对象，由新 P01 接管原 slug，避免产生未装配的历史正文；capstone/roadmap 索引随删除后调整。P01-P02 插入原 `deploy-observe` 所在全局位置，因此旧深链、上一章/下一章和 sitemap 都能立即验证。
+删除菜单里程碑提供的 `production-ops-stub.ts`，由正式 P01 接管同一 `production-ops-intro` slug。Agent 课程的 `deploy-observe` 对象和位置不变。`productionOpsChapters` 按 P01-P14 顺序整体装配；课程切换器、相邻章节与进度通过 `curriculum` 过滤，不依赖全局章节相邻位置。
 
 - [ ] **Step 5: 验证 GREEN、路由和导航并提交**
 
@@ -363,13 +277,13 @@ Run:
 
 ```bash
 PATH=$HOME/.nvm/versions/node/v22.22.1/bin:$PATH npm test -- src/content/chapters.test.ts
-PATH=$HOME/.nvm/versions/node/v22.22.1/bin:$PATH npx playwright test tests/e2e/course.spec.ts --grep "secondary nav"
+PATH=$HOME/.nvm/versions/node/v22.22.1/bin:$PATH npx playwright test tests/e2e/course.spec.ts --grep "production ops curriculum"
 ```
 
-Expected: 内容测试和桌面/移动专题导航测试通过，`/chapter/deploy-observe/` 深链继续有效，P02 位于 P01 之后。
+Expected: 内容测试和桌面/移动双课程导航测试通过，`/chapter/production-ops-intro/` 进入生产课程，Agent 的 `/chapter/deploy-observe/` 深链不变。
 
 ```bash
-git add src/content/chapters.base.ts src/content/chapters/index.ts src/content/chapters.test.ts src/content/chapters/production-ops
+git add src/content/chapters/index.ts src/content/chapters.test.ts src/content/chapters/production-ops src/content/chapters/production-ops-stub.ts
 git commit -m "feat(content): 增加生产系统地图与巡检课程"
 ```
 
@@ -650,13 +564,12 @@ git commit -m "feat(content): 完成联合运维与部署实践课程"
 先在 `src/content/chapters.test.ts` 增加最终课程数量与顺序契约：
 
 ```ts
-const productionOps = chapters.filter((chapter) => chapter.series?.id === "production-ops");
+const productionOps = chapters.filter((chapter) => chapter.curriculum === "production-ops");
 expect(productionOps).toHaveLength(14);
-expect(productionOps.map((chapter) => chapter.series?.order)).toEqual(
-  Array.from({ length: 14 }, (_, index) => index + 1),
-);
 expect(chapters).toHaveLength(42);
 expect(new Set(productionOps.map((chapter) => chapter.slug)).size).toBe(14);
+expect(productionOps[0]?.slug).toBe("production-ops-intro");
+expect(chapters.find((chapter) => chapter.slug === "deploy-observe")?.curriculum).toBe("agent");
 ```
 
 随后补齐浏览器行为：
@@ -682,7 +595,7 @@ test("keeps production screenshots within the viewport", async ({ page }) => {
 
 - [ ] **Step 2: 运行聚焦 E2E 并修到 GREEN**
 
-Run: `PATH=$HOME/.nvm/versions/node/v22.22.1/bin:$PATH npx playwright test tests/e2e/course.spec.ts --grep "production|annotated|secondary nav"`
+Run: `PATH=$HOME/.nvm/versions/node/v22.22.1/bin:$PATH npx playwright test tests/e2e/course.spec.ts --grep "production|annotated|curriculum"`
 
 Expected: desktop/mobile 全部通过；浏览器控制台无图片 404 和 React hydration 错误。
 

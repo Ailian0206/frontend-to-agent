@@ -1,4 +1,4 @@
-import type { ChapterSeriesId, CourseTrack } from "./types";
+import type { CourseTrack } from "./types";
 
 export interface TrackMeta {
   id: CourseTrack;
@@ -6,22 +6,6 @@ export interface TrackMeta {
   summary: string;
   focus: string[];
 }
-
-export interface ChapterSeriesMeta {
-  id: ChapterSeriesId;
-  label: string;
-  prefix: string;
-  summary: string;
-}
-
-export const chapterSeries: ChapterSeriesMeta[] = [
-  {
-    id: "production-ops",
-    label: "生产部署与运维",
-    prefix: "P",
-    summary: "从生产系统地图到四平台日常运维与故障定位。",
-  },
-];
 
 /** Stable track order for sidebar grouping and resources page. */
 export const courseTracks: TrackMeta[] = [

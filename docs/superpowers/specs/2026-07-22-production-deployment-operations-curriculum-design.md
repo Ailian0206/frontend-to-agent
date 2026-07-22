@@ -75,7 +75,7 @@
 - 浏览器请求、Web/API、Auth、数据库、后台任务和监控的完整链路。
 - 开发、Preview、Production 的差异，以及环境变量如何进入不同环境。
 - 四个平台各自负责和不负责什么。
-- 复用现有 `deploy-observe` slug，扩展为专题入口，避免已有链接失效。
+- 使用独立 `production-ops-intro` slug；Agent 课程现有 `deploy-observe` 保持原样。
 
 #### P02 个人项目的巡检节奏
 
@@ -218,15 +218,16 @@
 - `src/content/chapters/production-ops/`：按 overview、vercel、supabase、inngest、sentry、operations 拆分 14 课。
 - `public/course/production-ops/`：只保存脱敏、标注、压缩后的最终图片。
 - `src/content/resources.ts`：增加当前官方文档资源，不复制官方正文。
-- 现有 `deploy-observe` slug 作为 P01 保留；原部署内容纳入新版章节。
+- `production-ops-intro` 作为 P01；Agent 课程现有 `deploy-observe` 继续保留在原课程中。
 
-### 8.2 专题分组
+### 8.2 顶层课程归属
 
-`Chapter` 增加可选的专题标识和专题内顺序。现有课程不要求批量改写；未设置专题的 lesson 继续显示在 Agent 工程主线，新课显示在“生产部署与运维”二级分组。
+菜单里程碑 `feat/sidebar-dual-curriculum` 提供 `curriculum: "agent" | "production-ops"` 契约和顶层课程切换器。现有章节默认属于 Agent 课程；本里程碑的 14 课显式属于 `production-ops`。课程内 P01-P14 编号按生产课程数组顺序派生，不再新增 `series` 或二级分组模型。
 
 专题课仍保持：
 
 - `kind: "lesson"`
+- `curriculum: "production-ops"`
 - `track: "工程上线"`
 - 关联现有能力 S11、E2、E3、E4，并按具体课程关联 S10。
 
@@ -248,9 +249,9 @@
 ### 8.4 导航与路由
 
 - 章节继续使用 `/chapter/[slug]`，不增加平行课程应用。
-- 左侧“课程”分组增加 Agent 工程主线和生产部署与运维两个二级组。
-- 专题内使用 P01–P14 作为视觉序号；全局章节顺序仍用于上一章、下一章、学习进度和 sitemap。
-- 移动端目录保留相同信息层级，不增加卡片嵌套。
+- 左侧顶部课程切换器提供“AI Agent / 生产运维”两个独立目录；本里程碑消费既有契约，不重复修改菜单实现。
+- 生产课程内使用 P01–P14 作为视觉序号；上一课、下一课、搜索和学习进度只在当前课程范围内计算。
+- 章节继续参与 sitemap；移动端目录复用相同顶层课程切换和课程内分组，不增加卡片嵌套。
 
 ## 9. 安全与错误处理
 
@@ -282,7 +283,7 @@
 
 行为改动遵循 RED → GREEN → refactor：
 
-1. 先为专题元数据、导航分组、截图块和搜索索引增加失败测试。
+1. 先为生产课程归属、截图块和搜索索引增加失败测试。
 2. 实现最小类型、数据和渲染改动，使聚焦测试通过。
 3. 再逐批增加课程正文、资源和图片，并持续运行内容契约测试。
 
@@ -290,7 +291,8 @@
 
 内容测试至少验证：
 
-- 14 课 slug、专题顺序和 P01–P14 唯一且连续。
+- 14 课 slug、课程数组顺序和 P01–P14 唯一且连续。
+- 14 课都显式属于 `production-ops`；Agent 课程原有 `deploy-observe` 不变。
 - 所有专题课都属于“工程上线”并关联有效能力 ID。
 - 8 个平台课都包含平台通用内容、中文术语、截图、官方资源、风险说明和章节自检。
 - 所有截图路径存在，替代文字、记录日期和图例完整。
@@ -299,7 +301,7 @@
 
 组件和 E2E 至少验证：
 
-- 专题二级导航、当前章节、上一课 / 下一课和学习进度正确。
+- 双课程切换、当前章节、课程内上一课 / 下一课和学习进度正确。
 - `AnnotatedScreenshot` 的语义、图例和移动端布局可用。
 - 搜索可通过 Vercel、Supabase、Inngest、Sentry 及关键英文术语找到课程。
 - GitHub Pages 基础路径下图片和章节深链有效。
@@ -326,6 +328,7 @@ git diff --check
 这是新增完整课程能力的里程碑变更：
 
 - 使用 `codex/production-ops-curriculum` 功能分支和隔离 worktree 实施。
+- 菜单和 `curriculum` 基础契约由 `feat/sidebar-dual-curriculum` 交付；该分支合入 `main` 后，本分支通过 merge commit 同步，不修改其菜单交互。
 - 按内容模型与 UI、平台教程、跨平台课程和综合验收拆成小步提交。
 - 完整门禁通过后创建唯一 Draft PR。
 - 按仓库规则运行一次独立 Claude 审核，修复有效问题后由最终 CI 验证，使用 merge commit 合并。

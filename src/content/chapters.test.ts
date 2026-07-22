@@ -1,14 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { chapters, searchChapters, blockSearchText } from "./chapters";
-import {
-  groupChaptersByKind,
-  groupChaptersByTrack,
-  summarizeChapter,
-} from "./course-index";
+import { groupChaptersByTrack } from "./course-index";
 import { courseResources } from "./resources";
 import { coreSkillIds, electiveSkillIds, skillMap } from "./skills";
 import { courseTracks } from "./taxonomy";
-import type { Chapter, ContentBlock } from "./types";
+import type { ContentBlock } from "./types";
 
 describe("course content", () => {
   it("defines core skills S1–S11 and elective skills E1–E5", () => {
@@ -129,21 +125,6 @@ describe("course content", () => {
     expect(searchChapters("ORDER_GATEWAY_TIMEOUT").map((chapter) => chapter.slug)).toContain("tool-calling");
     expect(searchChapters("AbortSignal").map((chapter) => chapter.slug)).toContain("streaming-ui");
     expect(searchChapters("MultiServerMCPClient").map((chapter) => chapter.slug)).toContain("mcp-protocol");
-  });
-
-  it("carries production topic metadata into summaries and navigation", () => {
-    const chapter = {
-      ...chapters[0],
-      slug: "production-test",
-      series: { id: "production-ops", order: 1 },
-    } satisfies Chapter;
-
-    expect(summarizeChapter(chapter).series).toEqual({ id: "production-ops", order: 1 });
-    const lessonGroup = groupChaptersByKind([summarizeChapter(chapter)])[0];
-    expect(lessonGroup.subgroups?.[0]).toMatchObject({
-      id: "production-ops",
-      label: "生产部署与运维",
-    });
   });
 
   it("indexes screenshot title, alt text, legend, and source", () => {
