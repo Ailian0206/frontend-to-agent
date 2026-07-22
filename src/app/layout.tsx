@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { siteRoot } from "@/content/site";
 import "./globals.css";
 
 const geist = Geist({
@@ -14,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://ailian0206.github.io"),
+  metadataBase: new URL(siteRoot),
   title: "Frontend to Agent | 资深前端 AI Agent 转型教程",
   description: "面向 10 年以上前端工程师的 Node.js、TypeScript、LangChain.js 与 LangGraph.js 系统教程，含 MCP、HITL、评估与公开资源库。",
   openGraph: {

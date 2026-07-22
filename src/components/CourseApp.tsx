@@ -7,6 +7,7 @@ import {
   Check,
   CheckCircle2,
   CodeXml,
+  ExternalLink,
   Library,
   Link2,
   Menu,
@@ -28,11 +29,12 @@ import {
   type ChapterSearchItem,
   type ChapterSummary,
 } from "@/content/course-index";
+import { getResource } from "@/content/resources";
+import { siteOrigin } from "@/content/site";
 
 const progressKey = "frontend-to-agent:completed";
 const progressEvent = "frontend-to-agent:progress";
 const mobileQuery = "(max-width: 760px)";
-const siteOrigin = "https://ailian0206.github.io/frontend-to-agent";
 
 function parseStoredProgress(value: string): string[] {
   try {
@@ -70,8 +72,20 @@ function chapterHref(slug: string): string {
   return `/chapter/${slug}`;
 }
 
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  const tag = target.tagName;
+  return (
+    tag === "INPUT" ||
+    tag === "TEXTAREA" ||
+    tag === "SELECT" ||
+    target.isContentEditable
+  );
+}
+
 interface CourseAppProps {
-  activeChapter: ChapterSummary;
+  /** Omit on shell pages like /resources so chapter chrome stays inactive. */
+  activeChapter?: ChapterSummary;
   chapters: ChapterSummary[];
   searchIndex: ChapterSearchItem[];
   children: ReactNode;
@@ -90,17 +104,19 @@ export function CourseApp({
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [activeSection, setActiveSection] = useState(activeChapter.sections[0]?.id ?? "");
-  const [copied, setCopied] = useState(false);
+  const [activeSection, setActiveSection] = useState(activeChapter?.sections[0]?.id ?? "");
+  const [shareStatus, setShareStatus] = useState<"idle" | "copied" | "failed">("idle");
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchDialogRef = useRef<HTMLDivElement>(null);
   const searchReturnFocusRef = useRef<HTMLElement | null>(null);
   const mobileMenuButtonRef = useRef<HTMLButtonElement>(null);
   const mobileCloseButtonRef = useRef<HTMLButtonElement>(null);
 
-  const chapterIndex = chapters.findIndex((chapter) => chapter.slug === activeChapter.slug);
-  const previousChapter = chapters[chapterIndex - 1];
-  const nextChapter = chapters[chapterIndex + 1];
+  const chapterIndex = activeChapter
+    ? chapters.findIndex((chapter) => chapter.slug === activeChapter.slug)
+    : -1;
+  const previousChapter = chapterIndex > 0 ? chapters[chapterIndex - 1] : undefined;
+  const nextChapter = chapterIndex >= 0 ? chapters[chapterIndex + 1] : undefined;
   const results = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase("zh-CN");
     return normalized
@@ -109,26 +125,40 @@ export function CourseApp({
   }, [query, searchIndex]);
   const progress = Math.round((completed.length / chapters.length) * 100);
   const trackGroups = useMemo(() => groupChaptersByTrack(chapters), [chapters]);
+  const relatedResources = useMemo(
+    () =>
+      (activeChapter?.relatedResources ?? [])
+        .map((id) => getResource(id))
+        .filter((resource): resource is NonNullable<typeof resource> => Boolean(resource)),
+    [activeChapter?.relatedResources],
+  );
+  const resourcesActive = pathname.startsWith("/resources");
 
-  // Close overlays after route changes so Link navigation is not interrupted mid-click.
-  useEffect(() => {
-    setSearchOpen(false);
-    setMobileNavOpen(false);
-    setQuery("");
-  }, [pathname]);
+  // Close overlays after the router has accepted navigation (do not sync-close in click handlers).
+  function scheduleCloseOverlays(): void {
+    queueMicrotask(() => {
+      setSearchOpen(false);
+      setMobileNavOpen(false);
+      setQuery("");
+    });
+  }
 
   async function copyChapterLink(): Promise<void> {
+    if (!activeChapter) return;
     const url = `${siteOrigin}/chapter/${activeChapter.slug}/`;
     try {
+      if (!navigator.clipboard?.writeText) throw new Error("clipboard unavailable");
       await navigator.clipboard.writeText(url);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1600);
+      setShareStatus("copied");
+      window.setTimeout(() => setShareStatus("idle"), 1600);
     } catch {
-      setCopied(false);
+      setShareStatus("failed");
+      window.setTimeout(() => setShareStatus("idle"), 2200);
     }
   }
 
   useEffect(() => {
+    if (!activeChapter) return;
     const sections = activeChapter.sections
       .map(({ id }) => document.getElementById(id))
       .filter((section): section is HTMLElement => Boolean(section));
@@ -143,7 +173,7 @@ export function CourseApp({
     );
     sections.forEach((section) => observer.observe(section));
     return () => observer.disconnect();
-  }, [activeChapter.sections]);
+  }, [activeChapter]);
 
   useEffect(() => {
     if (!searchOpen && !mobileNavOpen) return;
@@ -207,9 +237,7 @@ export function CourseApp({
 
   useEffect(() => {
     function openSearchShortcut(event: KeyboardEvent) {
-      const target = event.target as HTMLElement;
-      const isTyping = target.tagName === "INPUT" || target.tagName === "TEXTAREA";
-      if (event.key === "/" && !isTyping && !searchOpen) {
+      if (event.key === "/" && !isEditableTarget(event.target) && !searchOpen) {
         event.preventDefault();
         searchReturnFocusRef.current = document.activeElement as HTMLElement | null;
         setSearchOpen(true);
@@ -230,12 +258,16 @@ export function CourseApp({
   }
 
   function toggleComplete(): void {
+    if (!activeChapter) return;
     const next = completed.includes(activeChapter.slug)
       ? completed.filter((slug) => slug !== activeChapter.slug)
       : [...completed, activeChapter.slug];
     localStorage.setItem(progressKey, JSON.stringify(next));
     window.dispatchEvent(new Event(progressEvent));
   }
+
+  const shareLabel =
+    shareStatus === "copied" ? "链接已复制" : shareStatus === "failed" ? "复制失败" : "复制本章链接";
 
   return (
     <div className="course-app">
@@ -250,7 +282,11 @@ export function CourseApp({
         ><Menu size={19} /></button>
         <div className="mobile-brand">
           <strong>Frontend → Agent</strong>
-          <span>{String(activeChapter.number).padStart(2, "0")} / {chapters.length}</span>
+          <span>
+            {activeChapter
+              ? `${String(activeChapter.number).padStart(2, "0")} / ${chapters.length}`
+              : "资源库"}
+          </span>
         </div>
         <button className="icon-button" type="button" onClick={openSearch} aria-label="搜索课程" title="搜索课程">
           <Search size={18} />
@@ -284,7 +320,7 @@ export function CourseApp({
               <p className="track-label" title={group.summary}>{group.track}</p>
               <ol>
                 {group.chapters.map((chapter) => {
-                  const active = chapter.slug === activeChapter.slug;
+                  const active = Boolean(activeChapter && chapter.slug === activeChapter.slug);
                   const done = completed.includes(chapter.slug);
                   return (
                     <li key={chapter.slug}>
@@ -292,6 +328,7 @@ export function CourseApp({
                         className={active ? "active" : ""}
                         href={chapterHref(chapter.slug)}
                         aria-current={active ? "page" : undefined}
+                        onClick={scheduleCloseOverlays}
                       >
                         <span className={`chapter-state ${done ? "done" : ""}`}>
                           {done ? <Check size={12} /> : String(chapter.number).padStart(2, "0")}
@@ -320,7 +357,12 @@ export function CourseApp({
         </div>
 
         <div className="nav-actions">
-          <Link className="github-link" href="/resources">
+          <Link
+            className={`github-link ${resourcesActive ? "active" : ""}`}
+            href="/resources"
+            aria-current={resourcesActive ? "page" : undefined}
+            onClick={scheduleCloseOverlays}
+          >
             <Library size={17} />公开资源库
           </Link>
           <a className="github-link" href="https://github.com/Ailian0206/frontend-to-agent" target="_blank" rel="noreferrer">
@@ -333,52 +375,86 @@ export function CourseApp({
 
       <main className="lesson-main">
         {children}
-        <footer className="lesson-footer">
-          <div className="footer-actions">
-            <button
-              type="button"
-              className={`complete-button ${completed.includes(activeChapter.slug) ? "completed" : ""}`}
-              onClick={toggleComplete}
-            ><CheckCircle2 size={19} />{completed.includes(activeChapter.slug) ? "本章已完成" : "标记本章完成"}</button>
-            <button type="button" className="share-button" onClick={copyChapterLink}>
-              <Link2 size={17} />{copied ? "链接已复制" : "复制本章链接"}
-            </button>
-          </div>
-          <div className="chapter-pagination">
-            {previousChapter ? <Link href={chapterHref(previousChapter.slug)}><ArrowLeft size={17} />上一章</Link> : <span aria-hidden="true" />}
-            {nextChapter ? <Link href={chapterHref(nextChapter.slug)}>下一章<ArrowRight size={17} /></Link> : <span aria-hidden="true" />}
-          </div>
-        </footer>
-      </main>
-
-      <aside className="lesson-outline">
-        <div>
-          <p className="outline-label">本章大纲</p>
-          <nav aria-label="本章大纲">
-            {activeChapter.sections.map((section, index) => (
+        {activeChapter ? (
+          <footer className="lesson-footer">
+            <div className="footer-actions">
               <button
                 type="button"
-                className={activeSection === section.id ? "active" : ""}
-                key={section.id}
-                onClick={() => document.getElementById(section.id)?.scrollIntoView({ behavior: "smooth" })}
-              ><span>{String(index + 1).padStart(2, "0")}</span>{section.title}</button>
-            ))}
-          </nav>
-        </div>
-        <div className="term-index">
-          <p className="outline-label">学习轨道</p>
-          <div><code>{activeChapter.track}</code></div>
-        </div>
-        <div className="term-index">
-          <p className="outline-label">标签</p>
-          <div>{activeChapter.tags.map((tag) => <code key={tag}>{tag}</code>)}</div>
-        </div>
-        <div className="term-index">
-          <p className="outline-label">关键术语</p>
-          <div>{activeChapter.terms.map((term) => <code key={term}>{term}</code>)}</div>
-        </div>
-        <div className="outline-note"><BookOpen size={18} /><p>先运行代码，再勾选自检。可用左侧轨道分类跳转，进度只保存在当前浏览器。</p></div>
-      </aside>
+                className={`complete-button ${completed.includes(activeChapter.slug) ? "completed" : ""}`}
+                onClick={toggleComplete}
+              ><CheckCircle2 size={19} />{completed.includes(activeChapter.slug) ? "本章已完成" : "标记本章完成"}</button>
+              <button type="button" className="share-button" onClick={copyChapterLink}>
+                <Link2 size={17} />{shareLabel}
+              </button>
+            </div>
+            <div className="chapter-pagination">
+              {previousChapter ? (
+                <Link href={chapterHref(previousChapter.slug)} onClick={scheduleCloseOverlays}>
+                  <ArrowLeft size={17} />上一章
+                </Link>
+              ) : <span aria-hidden="true" />}
+              {nextChapter ? (
+                <Link href={chapterHref(nextChapter.slug)} onClick={scheduleCloseOverlays}>
+                  下一章<ArrowRight size={17} />
+                </Link>
+              ) : <span aria-hidden="true" />}
+            </div>
+          </footer>
+        ) : null}
+      </main>
+
+      {activeChapter ? (
+        <aside className="lesson-outline">
+          <div>
+            <p className="outline-label">本章大纲</p>
+            <nav aria-label="本章大纲">
+              {activeChapter.sections.map((section, index) => (
+                <button
+                  type="button"
+                  className={activeSection === section.id ? "active" : ""}
+                  key={section.id}
+                  onClick={() => document.getElementById(section.id)?.scrollIntoView({ behavior: "smooth" })}
+                ><span>{String(index + 1).padStart(2, "0")}</span>{section.title}</button>
+              ))}
+            </nav>
+          </div>
+          <div className="term-index">
+            <p className="outline-label">学习轨道</p>
+            <div><code>{activeChapter.track}</code></div>
+          </div>
+          <div className="term-index">
+            <p className="outline-label">标签</p>
+            <div>{activeChapter.tags.map((tag) => <code key={tag}>{tag}</code>)}</div>
+          </div>
+          <div className="term-index">
+            <p className="outline-label">关键术语</p>
+            <div>{activeChapter.terms.map((term) => <code key={term}>{term}</code>)}</div>
+          </div>
+          {relatedResources.length ? (
+            <div className="term-index related-resources">
+              <p className="outline-label">相关公开资源</p>
+              <ul>
+                {relatedResources.map((resource) => (
+                  <li key={resource.id}>
+                    <a href={resource.url} target="_blank" rel="noreferrer">
+                      <span>{resource.title}</span>
+                      <ExternalLink size={13} aria-hidden="true" />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          <div className="outline-note"><BookOpen size={18} /><p>先运行代码，再勾选自检。可用左侧轨道分类跳转，进度只保存在当前浏览器。</p></div>
+        </aside>
+      ) : (
+        <aside className="lesson-outline">
+          <div className="outline-note">
+            <Library size={18} />
+            <p>这里是公开资源库。从左侧进入任意章节继续学习；资源链接在新标签页打开原文。</p>
+          </div>
+        </aside>
+      )}
 
       {searchOpen ? (
         <div className="search-overlay">
@@ -397,7 +473,7 @@ export function CourseApp({
             </div>
             <div className="search-results">
               {results.length ? results.map((chapter) => (
-                <Link href={chapterHref(chapter.slug)} key={chapter.slug}>
+                <Link href={chapterHref(chapter.slug)} key={chapter.slug} onClick={scheduleCloseOverlays}>
                   <span>{String(chapter.number).padStart(2, "0")}</span>
                   <div>
                     <strong>{chapter.shortTitle}</strong>

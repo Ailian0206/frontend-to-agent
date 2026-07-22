@@ -3,6 +3,13 @@ import { expect, test } from "@playwright/test";
 test("opens public resource catalog and filters by track", async ({ page }) => {
   await page.goto("/resources/");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("公开 Agent 教程与资源库");
+  await expect(page.getByRole("button", { name: "标记本章完成" })).toHaveCount(0);
+  await expect(page.getByRole("navigation", { name: "本章大纲" })).toHaveCount(0);
+
+  const openMenu = page.getByRole("button", { name: "打开课程目录" });
+  if (await openMenu.isVisible()) await openMenu.click();
+  await expect(page.getByRole("link", { name: "公开资源库" })).toHaveAttribute("aria-current", "page");
+
   await page.getByLabel("按轨道筛选").selectOption("工具与协议");
   await expect(page.getByText(/当前显示 \d+ 条/)).toBeVisible();
   await expect(page.getByRole("link", { name: /mcp|MCP|langchain-mcp|Model Context/i }).first()).toBeVisible();

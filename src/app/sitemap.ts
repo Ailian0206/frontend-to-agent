@@ -1,24 +1,23 @@
 import type { MetadataRoute } from "next";
 import { chapters } from "@/content/chapters";
-
-const origin = "https://ailian0206.github.io/frontend-to-agent";
+import { siteOrigin } from "@/content/site";
 
 export const dynamic = "force-static";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     {
-      url: `${origin}/`,
+      url: `${siteOrigin}/`,
       changeFrequency: "weekly" as const,
       priority: 1,
     },
     {
-      url: `${origin}/resources/`,
+      url: `${siteOrigin}/resources/`,
       changeFrequency: "weekly" as const,
       priority: 0.9,
     },
     ...chapters.map((chapter) => ({
-      url: `${origin}/chapter/${chapter.slug}/`,
+      url: `${siteOrigin}/chapter/${chapter.slug}/`,
       changeFrequency: "monthly" as const,
       priority: chapter.number === 1 ? 1 : 0.8,
     })),

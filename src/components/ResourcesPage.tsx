@@ -30,7 +30,6 @@ export function ResourcesPage() {
 
   return (
     <CourseApp
-      activeChapter={chapterSummaries[0]}
       chapters={chapterSummaries}
       searchIndex={chapterSearchIndex}
     >

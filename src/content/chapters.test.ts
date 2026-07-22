@@ -83,4 +83,13 @@ describe("course content", () => {
     expect(new Set(courseResources.map((resource) => resource.track)).size).toBeGreaterThanOrEqual(5);
     expect(courseResources.every((resource) => resource.url.startsWith("http"))).toBe(true);
   });
+
+  it("keeps relatedResources ids resolvable against the catalog", () => {
+    const resourceIds = new Set(courseResources.map((resource) => resource.id));
+    for (const chapter of chapters) {
+      for (const id of chapter.relatedResources ?? []) {
+        expect(resourceIds.has(id), `${chapter.slug} references missing resource ${id}`).toBe(true);
+      }
+    }
+  });
 });

@@ -14,6 +14,7 @@ export interface ChapterSummary {
   level: Chapter["level"];
   goal: string;
   terms: string[];
+  relatedResources: string[];
   sections: { id: string; title: string }[];
 }
 
@@ -34,6 +35,7 @@ export function summarizeChapter(chapter: Chapter): ChapterSummary {
     level: chapter.level,
     goal: chapter.goal,
     terms: chapter.terms,
+    relatedResources: chapter.relatedResources ?? [],
     sections: chapter.sections.map(({ id, title }) => ({ id, title })),
   };
 }
