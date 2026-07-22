@@ -12,6 +12,10 @@ import {
   inngestRetriesConcurrencyCostChapter,
 } from "./inngest";
 import {
+  sentryIssuesReleasesSourcemapsChapter,
+  sentryTracesAlertsPrivacyChapter,
+} from "./sentry";
+import {
   vercelCoreOperationsChapter,
   vercelReleaseObservabilityChapter,
 } from "./vercel";
@@ -25,4 +29,6 @@ export const productionOpsChapters: Omit<Chapter, "number">[] = [
   supabaseAuthRlsRecoveryChapter,
   inngestEventsFunctionsRunsChapter,
   inngestRetriesConcurrencyCostChapter,
+  sentryIssuesReleasesSourcemapsChapter,
+  sentryTracesAlertsPrivacyChapter,
 ];
