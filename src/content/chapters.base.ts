@@ -415,6 +415,7 @@ main().catch((error) => {
     track: "工具与协议",
     tags: ["ReAct", "Tool", "邮件"],
     relatedResources: ["build-your-own-ai-agent", "agents-from-scratch-ts"],
+    relatedLabs: ["lab-l03"],
     duration: "110 分钟",
     level: "进阶",
     goal: "让模型在天气查询与邮件发送之间自主选择工具，并理解 ReAct 循环。",
@@ -427,7 +428,7 @@ main().catch((error) => {
         blocks: [
           {
             type: "paragraph",
-            text: "ReAct 表示 Reasoning + Acting 的交替：模型根据当前可见状态选择下一项动作，宿主执行动作并把观察结果交回模型。工程上记录的是工具名、参数、结果、耗时和状态变化，不需要也不应要求模型暴露隐藏思维链。对调试真正有用的是可审计轨迹。",
+            text: "ReAct 表示 Reasoning + Acting 的交替：模型根据当前可见状态选择下一项动作，宿主执行动作并把观察结果交回模型。工程上记录的是工具名、参数、结果、耗时和状态变化，不需要也不应要求模型暴露隐藏思维链。对调试真正有用的是可审计轨迹。第一个 Agent 的价值不在于“更像人思考”，而在于把多步 I/O 编排交给模型试探，同时你用预算、Schema 和终止条件把探索关在笼子里。",
           },
           {
             type: "diagram",
@@ -442,6 +443,35 @@ main().catch((error) => {
   O2 --> M
   M -->|完成| A[向用户汇报结果]
   M -->|超过步数或超时| X[安全终止]`,
+          },
+        ],
+      },
+      {
+        id: "when-react",
+        title: "何时用 ReAct Agent，何时不用",
+        blocks: [
+          {
+            type: "paragraph",
+            text: "ReAct 适合“目标明确、步骤不固定、需要查外部世界再行动”的任务，例如先查天气再决定是否发提醒邮件。它不适合把已经写死的审批链再包一层模型：固定顺序用 LangGraph 或普通工作流更便宜、更可测。面试和评审里常问“为什么不用工作流”——答案应落在成本、可维护性和失败模式，而不是“Agent 更酷”。",
+          },
+          {
+            type: "table",
+            headers: ["场景", "何时用 ReAct", "何时不用（优先替代）"],
+            rows: [
+              ["查天气 + 可选发信", "用户措辞多变，是否发信取决于查询结果", "强制“永远先查再发”时用显式两节点工作流"],
+              ["客服多工具查单", "意图与工具组合不确定，需多轮补参", "单一 intent→单一 API 的 CRUD 用结构化输出 + 一次调用"],
+              ["研发脚本生成", "需要读文件、跑命令、看错误再改", "无工具、纯文案用 Chatbot；危险命令用白名单工作流"],
+              ["报表汇总", "来源多、顺序可调整", "SQL/ETL 已固定时用定时任务，不用模型猜步骤"],
+              ["支付 / 退款", "极少应让模型自由选工具", "interrupt + 人工确认或完全禁止模型触发写操作"],
+            ],
+          },
+          {
+            type: "paragraph",
+            text: "判断标准可以压成三问：步骤能否在纸上画成有限状态机？错了能否用单元测试钉死？单次失败的最大损失是多少？若状态机清晰、测试可写、损失可控，就不要为了 ReAct 而 ReAct。本章天气邮件示例故意保留两步不确定性，用来练习轨迹调试；生产里若业务写死“有收件人就发”，应把 send_email 放到条件边后面，而不是赌模型每次都记得顺序。",
+          },
+          {
+            type: "paragraph",
+            text: "从面试作品角度，第一个 Agent 章应能展示「我懂循环、懂副作用、懂可观测」：贴一条脱敏轨迹截图，标出每一步 tool 与耗时；说明 Dry Run 如何防止误发信；对比若改成 LangGraph 两节点，成本与可测性如何变化。评审人不在乎你绑了多少工具，而在乎失败时系统是否可预期、可回滚、可解释。",
           },
         ],
       },
@@ -540,6 +570,70 @@ console.dir(result.messages.at(-1)?.content, { depth: null });`,
         ],
       },
       {
+        id: "react-anti-pattern",
+        title: "反例：没有终止条件的“永远再试一次”",
+        blocks: [
+          {
+            type: "paragraph",
+            text: "新手常把 recursionLimit 当成唯一刹车，却在系统提示里写“直到成功为止”“想尽一切办法完成”。模型会把每次工具失败都当成需要再选动作的信号：天气 API 超时后反复 geocode，邮件 Dry Run 后再次 send_email，上下文被重复观察塞满，费用线性上涨，用户却看不到进展。这不是“模型笨”，而是终止协议缺失。",
+          },
+          {
+            type: "bullets",
+            items: [
+              "反例提示：「你是万能助手，必须完成用户一切请求，失败就换方法重试。」",
+              "典型轨迹：get_weather 超时 → 换拼音城市再查 → 再次超时 → 编造温度 → send_email → 用户投诉。",
+              "根因：没有区分可重试错误、需用户补参、应直接失败的类别；也没有 maxToolCalls 与总时长预算。",
+              "改法：系统提示写清「同一工具连续失败 2 次则向用户说明并停止」；宿主对 TimeoutError 返回结构化 code，引导模型追问而不是盲重试。",
+            ],
+          },
+          {
+            type: "paragraph",
+            text: "与前端类比：没有 loading 上限的轮询同样会拖死页面。Agent 要在产品层展示“第几步 / 共几步预算”，并在超限时给出可恢复状态（已查到的城市、草稿邮件），而不是静默烧 token。",
+          },
+          {
+            type: "paragraph",
+            text: "练习时可以用同一句用户话跑三次，对比轨迹是否稳定；若第二步总在 send_email 与纯文本之间摇摆，说明描述或系统提示里的前置条件不够硬。把三次轨迹 diff 贴进笔记，比背诵 ReAct 论文定义更接近真实调试。",
+          },
+        ],
+      },
+      {
+        id: "failure-interview",
+        title: "失败分类与面试追问",
+        blocks: [
+          {
+            type: "paragraph",
+            text: "调试 ReAct Agent 时，先把失败归到单一主因，再决定改提示、改工具描述还是改编排。两周内对同一类失败做集中治理，比每天换模型版本有效得多。",
+          },
+          {
+            type: "table",
+            headers: ["类别", "表现", "优先修复"],
+            rows: [
+              ["intent", "用户只问天气却发了邮件", "收紧副作用工具描述 + 评估集断言"],
+              ["routing", "该发信时只回复文字", "工具 description 写前置条件；必要时工作流硬编码顺序"],
+              ["schema", "收件人格式错、城市名为空", "Zod 拒绝 + 把校验错误原文返回模型"],
+              ["integration", "Open-Meteo / SMTP 超时或 5xx", "超时、重试上限、熔断；观察里带 error code"],
+              ["termination", "步数耗尽仍无最终答复", "recursionLimit、单轮 tool 上限、显式 finish 工具"],
+              ["generation", "天气数字对但邮件文案胡编", "要求引用上一观察 JSON；人工抽检邮件模板"],
+            ],
+          },
+          {
+            type: "table",
+            headers: ["追问", "答纲"],
+            rows: [
+              ["ReAct 和 LangGraph 状态图怎么选？", "步骤固定、要强审计用图；步骤随用户意图变、工具少时用 ReAct；二者可混用（图内嵌 Agent 节点）。"],
+              ["怎么证明 Agent 没有乱发邮件？", "Dry Run 默认开启、轨迹日志、评估集断言 tool 序列、生产 HITL 或收件人白名单。"],
+              ["recursionLimit 设多少合理？", "按业务最长路径估算再加 1～2 步缓冲；配合监控看 P95 步数，而不是拍脑袋设 50。"],
+              ["工具返回要不要塞原始 HTTP body？", "不要；返回稳定 DTO + 错误码，避免隐私与上下文膨胀，也方便单测 mock。"],
+              ["前端如何展示 Agent 进度？", "按 tool 事件驱动步骤条，见 lab-l03 的流式事件契约；不要只流式吐最终 markdown。"],
+            ],
+          },
+          {
+            type: "paragraph",
+            text: "把上表抄进个人知识库，每完成一次本地实验就填一行「实际失败类别 + 修复动作」。两周后你会清楚自己卡在 integration 还是 routing，这比泛泛地说「我在学 Agent」更能打动面试追问。",
+          },
+        ],
+      },
+      {
         id: "safety",
         title: "副作用工具必须有刹车",
         blocks: [
@@ -555,7 +649,13 @@ console.dir(result.messages.at(-1)?.content, { depth: null });`,
           },
           {
             type: "paragraph",
-            text: "调试本章时，先把模型排除在外：分别直接 invoke 天气与邮件工具，确认 Schema、超时和返回 DTO；再让模型只绑定一个工具，观察它能否稳定生成参数；最后才组合两个工具检查轨迹。若 Agent 顺序错误，先优化工具描述中的前置条件，而不是立即写一大段提示。如果业务强制要求“必须先查天气”，最佳方案是用工作流显式连边，而不是希望模型每次都记得规则。",
+            text: "调试本章时，先把模型排除在外：分别直接 invoke 天气与邮件工具，确认 Schema、超时和返回 DTO；再让模型只绑定一个工具，观察它能否稳定生成参数；最后才组合两个工具检查轨迹。若 Agent 顺序错误，先优化工具描述中的前置条件，而不是立即写一大段提示。如果业务强制要求“必须先查天气”，最佳方案是用工作流显式连边，而不是希望模型每次都记得规则。记录每次 invoke 的 threadId、tool 序列与耗时，失败时用上一节的分类表定位是 routing 还是 integration，避免一上来就调 temperature 或换模型。",
+          },
+          {
+            type: "callout",
+            tone: "note",
+            title: "动手 Lab：first-agent → lab-l03",
+            text: "站点章节 first-agent 侧重 ReAct 闭环与副作用刹车；配套可运行代码在 examples/lab-l03-react-stream/（章节 slug：lab-l03）。Lab 用 mock 事件流练习 reducer 与 UI 契约，无需付费模型即可 npm test。先把本章天气邮件 Agent 跑通轨迹，再在 Lab 里把 tool_start / tool_end 接到前端步骤条。",
           },
           {
             type: "checkpoint",
@@ -565,6 +665,7 @@ console.dir(result.messages.at(-1)?.content, { depth: null });`,
               "没有明确收件人时 Agent 会追问而不是猜测",
               "Dry Run 轨迹能看到天气结果进入邮件正文",
               "把 recursionLimit 改为 1 时能观察到安全终止错误",
+              "能口述至少两条「何时不用 ReAct」并对应替代方案",
             ],
           },
         ],
@@ -581,6 +682,7 @@ console.dir(result.messages.at(-1)?.content, { depth: null });`,
     track: "工具与协议",
     tags: ["Zod", "权限", "契约"],
     relatedResources: ["build-your-own-ai-agent", "mcp-langchain-js"],
+    relatedLabs: ["lab-l02"],
     duration: "95 分钟",
     level: "进阶",
     goal: "开发可测试、可观测、可控制副作用的自定义工具。",
@@ -593,7 +695,7 @@ console.dir(result.messages.at(-1)?.content, { depth: null });`,
         blocks: [
           {
             type: "paragraph",
-            text: "模型只看到工具的 name、description 与参数 Schema。描述决定模型何时选择工具，Schema 决定它能提交什么，宿主函数决定现实世界真正发生什么。一个好的 Tool 应该单一职责、参数小而明确、结果稳定、失败可分类、权限最小化。不要把整个内部 SDK 或万能 SQL 查询暴露给模型。",
+            text: "模型只看到工具的 name、description 与参数 Schema。描述决定模型何时选择工具，Schema 决定它能提交什么，宿主函数决定现实世界真正发生什么。一个好的 Tool 应该单一职责、参数小而明确、结果稳定、失败可分类、权限最小化。不要把整个内部 SDK 或万能 SQL 查询暴露给模型。Tool Calling 的本质是把「有限、可审计、可单测」的能力切片交给概率路由器；切片越大，面试里越难回答「出事谁负责」。",
           },
           {
             type: "table",
@@ -605,6 +707,35 @@ console.dir(result.messages.at(-1)?.content, { depth: null });`,
               ["返回完整 HTTP Response", "噪声、隐私、上下文膨胀", "裁剪为稳定业务 DTO"],
               ["无限等待", "阻塞整个 Agent", "每个 I/O 都设置 AbortSignal"],
             ],
+          },
+        ],
+      },
+      {
+        id: "when-tool",
+        title: "何时暴露 Tool，何时不用模型调接口",
+        blocks: [
+          {
+            type: "paragraph",
+            text: "不是每个 HTTP 接口都要变成 Tool。只有当「是否调用、调用哪一个、参数从哪来」需要结合自然语言上下文判断时，才值得把能力暴露给模型。纯确定性链路（登录用户查自己的订单列表）更适合在 API 层直接执行，把结果作为上下文塞进 Prompt，而不是让模型猜 orderId 格式。",
+          },
+          {
+            type: "table",
+            headers: ["能力", "何时用 Tool Calling", "何时不用"],
+            rows: [
+              ["只读订单状态", "用户口语化订单号、需与对话历史对齐", "已解析出 orderId 的后台任务用 Gateway 直调"],
+              ["发邮件 / 退款", "极少；通常 interrupt + 专用 API", "不要让模型持有写权限 Tool"],
+              ["搜索内部文档", "问题措辞开放，需检索再答", "固定报表用 RAG 管道 + 模板回答"],
+              ["运行 Shell", "几乎永远不该对生产开放", "用白名单脚本 Tool 或 CI，而非 bash 万能工具"],
+              ["聚合客户画像", "多源只读、字段随问题变", "字段固定时用 BFF 一次返回 JSON"],
+            ],
+          },
+          {
+            type: "paragraph",
+            text: "面试常问「Tool 和 MCP 区别」：Tool 是宿主进程内的函数契约；MCP 是跨进程/跨团队的能力协议。何时用 MCP——当工具由别的团队维护、需要版本化发布与权限隔离时。何时不用——只有一个 monolith、三个只读函数时，先写好 Zod + Vitest 比上 MCP 更快。",
+          },
+          {
+            type: "paragraph",
+            text: "权限与幂等不要写进 description 吓唬模型，而要在宿主代码里强制执行。description 负责「选与不选」；execute 负责「能不能做」。调试非法调用时，先看 trace 里是否出现不该出现的 tool.name，再查鉴权日志，而不是加长 System Prompt。",
           },
         ],
       },
@@ -673,6 +804,74 @@ it("returns a stable business DTO", async () => {
             output: `运行 npx vitest run。
 预期：测试通过，且无需调用真实订单服务或模型。`,
           },
+          {
+            type: "paragraph",
+            text: "注意测试路径刻意绕过 LLM：Gateway 用 vi.fn mock，断言的是 JSON DTO 与错误码。这是 Tool 层调试的黄金标准——模型漂移时，单测仍绿；单测红时，先修 Schema 或 Gateway，而不是怪模型。非法 orderId 应在 Zod 层失败，连 mock Gateway 都不该被调用。",
+          },
+        ],
+      },
+      {
+        id: "tool-anti-pattern",
+        title: "反例：万能 manage_order 工具",
+        blocks: [
+          {
+            type: "paragraph",
+            text: "反例是把「查询、取消、退款、改地址」塞进一个 manage_order(action, payload) 工具，description 写「处理订单相关请求」。模型极易选对这个工具，却在 action 上幻觉出 refund；Zod 若只校验 string，宿主就会在未鉴权情况下执行写操作。这类设计在 demo 里显得工具少、很省事，上线后却是审计噩梦。",
+          },
+          {
+            type: "bullets",
+            items: [
+              "坏签名：manage_order({ action: z.enum([...]), data: z.record(z.unknown()) })",
+              "坏描述：「根据用户需求灵活处理订单」——没有写明只读边界",
+              "坏返回：把下游 4xx 的 HTML 错误页原样塞回上下文",
+              "改法：拆成 get_order_status、request_cancel（需 HITL）等单一意图工具；写操作单独鉴权",
+            ],
+          },
+          {
+            type: "paragraph",
+            text: "对照本章订单工具：正则锁死 ORD- 格式、description 强调只读、错误映射为 ORDER_GATEWAY_TIMEOUT 等稳定 code。调试时若模型总传错单号，优先加 Few-shot 或改 description，而不是放宽 Schema 去「兼容」幻觉单号。",
+          },
+          {
+            type: "paragraph",
+            text: "在代码评审里，凡是出现 z.record(z.unknown()) 或 action 字符串分支的 Tool，都应触发红线讨论：这类接口几乎无法写完整单测矩阵，也无法在事故后回答「模型当时有哪些合法选择」。反例的价值是把团队从「少写几个工具」的懒惰里拉出来。",
+          },
+        ],
+      },
+      {
+        id: "tool-failure-interview",
+        title: "失败分类与面试追问",
+        blocks: [
+          {
+            type: "paragraph",
+            text: "Tool 层失败要先区分「模型不该调用」「参数不合法」「下游不可用」「业务拒绝」四类。日志与 trace 应带 tool.name、脱敏参数、error code、duration，方便与 Agent 层的 routing / termination 交叉分析。",
+          },
+          {
+            type: "table",
+            headers: ["类别", "表现", "调试与修复"],
+            rows: [
+              ["routing", "用户闲聊却触发 get_order_status", "收紧 description；评估集统计误触发率"],
+              ["schema", "Zod 拒绝 ORD-xxx 非法格式", "把 issue 返回模型；禁止静默吞掉"],
+              ["integration", "ORDER_GATEWAY_TIMEOUT", "调超时/重试；观察里提示用户稍后再试"],
+              ["authorization", "Gateway 403 租户不匹配", "宿主注入用户上下文，不信模型传的 tenantId"],
+              ["idempotency", "重试导致重复退款", "写操作强制幂等键 + 状态查询工具"],
+              ["observability", "线上只能看到「工具失败」", "统一错误码表；关联 traceId 到工单"],
+            ],
+          },
+          {
+            type: "table",
+            headers: ["追问", "答纲"],
+            rows: [
+              ["Tool 参数校验放 Zod 还是业务层？", "格式与范围放 Zod（模型可见）；权限与租户放宿主（模型不可见）。"],
+              ["怎么测 Tool 而不烧 token？", "tool.invoke + mock Gateway，如本章 Vitest；E2E 再测整条 Agent。"],
+              ["Dry Run 适用于哪些工具？", "所有副作用工具默认 Dry Run；只读工具可直接打真实依赖或录播 fixture。"],
+              ["MCP 会取代手写 Tool 吗？", "不会完全取代；MCP 解决分发与隔离，契约仍要 Zod/JSON Schema 与单测。"],
+              ["工具返回太大怎么办？", "分页、摘要字段、或二级 get_detail；避免把整份 JSON 日志塞进上下文。"],
+            ],
+          },
+          {
+            type: "paragraph",
+            text: "面试时若被问到「你做过最硬的 Tool 调试」，用 ORDER_GATEWAY_TIMEOUT 举例：如何区分 Zod 失败与下游超时、如何在观察里给模型可行动文案、如何用 Vitest 保证重构不回归。能讲清这条链路，比罗列十个工具名更有说服力。",
+          },
         ],
       },
       {
@@ -692,7 +891,13 @@ it("returns a stable business DTO", async () => {
           },
           {
             type: "paragraph",
-            text: "工具粒度要围绕业务意图，而不是底层 API 端点。`get_customer_context` 可以在服务端聚合多个只读接口，减少模型往返；但 `manage_customer` 同时读取、更新和退款就过于宽泛。返回结果要控制大小，只保留下一步决策需要的信息，并用枚举状态代替自然语言。对同一轮可并行的只读调用可以并发执行，对写操作则要串行、加锁或使用业务幂等键。把工具目录也当作 API 产品维护：版本、所有者、权限、SLO 和弃用策略缺一不可。",
+            text: "工具粒度要围绕业务意图，而不是底层 API 端点。`get_customer_context` 可以在服务端聚合多个只读接口，减少模型往返；但 `manage_customer` 同时读取、更新和退款就过于宽泛。返回结果要控制大小，只保留下一步决策需要的信息，并用枚举状态代替自然语言。对同一轮可并行的只读调用可以并发执行，对写操作则要串行、加锁或使用业务幂等键。把工具目录也当作 API 产品维护：版本、所有者、权限、SLO 和弃用策略缺一不可。上线前用检查表过一遍：每个 Tool 是否有单测、是否有超时、副作用是否有 Dry Run 或 HITL、日志是否脱敏——这四项在面试架构题里几乎必问。",
+          },
+          {
+            type: "callout",
+            tone: "note",
+            title: "动手 Lab：tool-calling → lab-l02",
+            text: "站点章节 tool-calling 与 examples/lab-l02-tool-contract/（章节 slug：lab-l02）对齐：订单只读 Tool、非法参数与 ORDER_GATEWAY_TIMEOUT 等错误契约。在仓库根目录进入该子包执行 npm test，无需调用付费模型即可验证 Schema 与 Gateway 行为。完成本章订单工具代码后，用 Lab 里的用例对照你的错误码命名是否稳定。",
           },
           {
             type: "checkpoint",
@@ -702,6 +907,7 @@ it("returns a stable business DTO", async () => {
               "非法订单号在进入 Gateway 前被 Zod 拒绝",
               "列出项目里所有有副作用的工具及确认策略",
               "日志中看不到 token、密码、邮件正文等敏感数据",
+              "能根据失败分类表说明一次真实或模拟的 Tool 调试过程",
             ],
           },
         ],

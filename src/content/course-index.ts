@@ -13,6 +13,7 @@ export interface ChapterSummary {
   kind: ContentKind;
   skills: SkillId[];
   comingSoon?: boolean;
+  relatedLabs: string[];
   duration: string;
   level: Chapter["level"];
   goal: string;
@@ -37,6 +38,7 @@ export function summarizeChapter(chapter: Chapter): ChapterSummary {
     kind: chapter.kind,
     skills: chapter.skills,
     comingSoon: chapter.comingSoon,
+    relatedLabs: chapter.relatedLabs ?? [],
     duration: chapter.duration,
     level: chapter.level,
     goal: chapter.goal,

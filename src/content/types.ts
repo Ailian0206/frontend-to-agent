@@ -88,6 +88,8 @@ export interface Chapter {
   kind: ContentKind;
   /** Linked entries from the skill map (S1–S11 / E1–E5). */
   skills: SkillId[];
+  /** Lab chapter slugs that prove skills taught in this lesson. */
+  relatedLabs?: string[];
   /** Stub chapter reserved for a later milestone (nav-only for now). */
   comingSoon?: boolean;
   duration: string;

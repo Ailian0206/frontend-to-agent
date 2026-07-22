@@ -1381,6 +1381,16 @@ tbody tr:hover td {
   margin-top: 12px;
 }
 
+.lab-link-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .skill-badge {
   display: inline-flex;
   align-items: center;
