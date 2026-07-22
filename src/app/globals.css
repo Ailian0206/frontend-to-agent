@@ -792,6 +792,122 @@ tbody tr:hover td {
   text-align: center;
 }
 
+.annotated-screenshot {
+  margin: 32px 0 38px;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: 5px;
+  background: var(--paper);
+}
+
+.screenshot-image {
+  position: relative;
+  display: grid;
+  width: 100%;
+  place-items: center;
+  overflow: hidden;
+  border-bottom: 1px solid var(--line);
+  background: #e7e9e5;
+}
+
+.screenshot-image img {
+  display: block;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+.screenshot-caption {
+  display: flex;
+  padding: 16px 18px;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.screenshot-caption > div {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 9px;
+}
+
+.screenshot-caption strong,
+.screenshot-legend strong {
+  overflow-wrap: anywhere;
+}
+
+.screenshot-kind {
+  flex: 0 0 auto;
+  padding: 2px 6px;
+  border: 1px solid #97b9ac;
+  border-radius: 3px;
+  background: var(--jade-soft);
+  color: #1d5b49;
+  font: 700 9px/1.5 var(--font-mono);
+}
+
+.screenshot-kind.illustration {
+  border-color: #aebdca;
+  background: var(--blue-soft);
+  color: #34546d;
+}
+
+.screenshot-caption > p {
+  display: flex;
+  margin: 1px 0 0;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font: 10px/1.5 var(--font-mono);
+}
+
+.screenshot-caption a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--accent-dark);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.screenshot-legend {
+  display: grid;
+  margin: 0;
+  padding: 0 18px 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 18px;
+  list-style: none;
+}
+
+.screenshot-legend li {
+  display: grid;
+  min-width: 0;
+  padding-top: 10px;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.screenshot-legend li > span {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  font: 700 10px/1 var(--font-mono);
+}
+
+.screenshot-legend p {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
 .diagram-skeleton {
   display: flex;
   min-height: 220px;
@@ -1294,6 +1410,28 @@ tbody tr:hover td {
 
   .diagram-scroll-hint {
     display: block;
+  }
+
+  .annotated-screenshot {
+    margin-right: -8px;
+    margin-left: -8px;
+  }
+
+  .screenshot-caption {
+    padding: 14px;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .screenshot-caption > p {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  .screenshot-legend {
+    padding: 0 14px 14px;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .lesson-footer {

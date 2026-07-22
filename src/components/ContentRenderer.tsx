@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import type { ContentBlock } from "@/content/types";
+import { AnnotatedScreenshot } from "./AnnotatedScreenshot";
 import { CodeBlock } from "./CodeBlock";
 import { MermaidDiagram } from "./MermaidDiagram";
 
@@ -102,6 +103,8 @@ export function ContentRenderer({ blocks }: ContentRendererProps) {
         return <CodeBlock {...block} key={key} />;
       case "diagram":
         return <MermaidDiagram {...block} key={key} />;
+      case "screenshot":
+        return <AnnotatedScreenshot {...block} key={key} />;
       case "checkpoint":
         return (
           <aside className="checkpoint" key={key}>
