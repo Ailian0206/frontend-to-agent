@@ -9,7 +9,7 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:examples": "npm --prefix examples/lab-l01-structured-output ci && npm --prefix examples/lab-l01-structured-output test && npm --prefix examples/lab-l02-tool-contract ci && npm --prefix examples/lab-l02-tool-contract test && npm --prefix examples/lab-l03-react-stream ci && npm --prefix examples/lab-l03-react-stream test && npm --prefix examples/lab-l04-rag-eval ci && npm --prefix examples/lab-l04-rag-eval test && npm --prefix examples/lab-l05-checkpoint-hitl ci && npm --prefix examples/lab-l05-checkpoint-hitl test && npm --prefix examples/lab-l06-supervisor ci && npm --prefix examples/lab-l06-supervisor test",
+    "test:examples": "npm --prefix examples/lab-l01-structured-output ci && npm --prefix examples/lab-l01-structured-output test && npm --prefix examples/lab-l02-tool-contract ci && npm --prefix examples/lab-l02-tool-contract test && npm --prefix examples/lab-l03-react-stream ci && npm --prefix examples/lab-l03-react-stream test && npm --prefix examples/lab-l04-rag-eval ci && npm --prefix examples/lab-l04-rag-eval test && npm --prefix examples/lab-l05-checkpoint-hitl ci && npm --prefix examples/lab-l05-checkpoint-hitl test && npm --prefix examples/lab-l06-supervisor ci && npm --prefix examples/lab-l06-supervisor test && npm --prefix examples/lab-l07-mcp-whitelist ci && npm --prefix examples/lab-l07-mcp-whitelist test && npm --prefix examples/lab-l08-eval-guardrail ci && npm --prefix examples/lab-l08-eval-guardrail test",
     "test:e2e": "playwright test",
     "test:ci": "npm run lint && npm run typecheck && npm run test && npm run test:examples && npm run build"
   },

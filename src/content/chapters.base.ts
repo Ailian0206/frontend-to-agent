@@ -1675,6 +1675,7 @@ export function run(intent: Intent, toolName: string): RunResult {
     slug: "deploy-observe",
     kind: "lesson",
     skills: ["S11"],
+    relatedLabs: ["lab-l08"],
     title: "部署与监控：API 服务与前端界面",
     shortTitle: "部署、监控与前端",
     phase: "产品化",
@@ -1780,6 +1781,43 @@ export function useAgentChat(threadId: string) {
         ],
       },
       {
+        id: "when-deploy",
+        title: "何时 Agent API 化，何时保持脚本/队列",
+        blocks: [
+          {
+            type: "paragraph",
+            text: "「何时用」同步 HTTP API：交互式问答、P95 总时长在网关与 AbortSignal 预算内、需要浏览器直连并透传 traceId。「何时不用」：长研究任务（应队列 + runId + SSE/WebSocket）、批处理报表、或尚无鉴权/限流/输入校验——此时应先修门禁再暴露公网。Serverless 上跑长递归 Agent 常撞冷启动与超时；常驻 Worker + 队列更适合超 45 秒任务。面试别把“上了 Hono”等于“可生产”：部署层要回答取消、降级与成本上限。",
+          },
+          {
+            type: "table",
+            headers: ["场景", "何时用", "何时不用", "常见误判"],
+            rows: [
+              ["站内聊天", "Zod 校验 + 超时 + 限流", "裸 POST 无 thread 绑定", "忽略 AbortSignal 传播"],
+              ["长任务研究", "enqueue 立即返回 runId", "单请求 hold 到图跑完", "网关 504 后 Agent 仍在跑"],
+              ["内网运维助手", "mTLS + 服务账号", "公网开放 /api/chat", "把 eval 护栏只放在文档里"],
+              ["MVP 演示", "单实例 + 成本封顶", "无监控就上生产流量", "前端伪造工具进度条"],
+              ["多租户 SaaS", "tenant 进 configurable", "共享 threadId 池", "trace 未脱敏用户原文"],
+            ],
+          },
+        ],
+      },
+      {
+        id: "anti-deploy",
+        title: "反例：聊天 API 无门禁、无 trace",
+        blocks: [
+          {
+            type: "callout",
+            tone: "warning",
+            title: "反例（不要模仿）",
+            text: "POST /api/chat 无鉴权、message 无 max length，Agent 递归无上限；用户关页面后后端仍继续调工具和模型。500 时统一返回 \"Agent request failed\"，日志无 traceId，无法关联某次 tool 超时。护栏写在 lib 里但 route handler 直接 `return c.json({ answer })` 绕过。成本无预算，一次循环 30 轮模型调用无人知晓。",
+          },
+          {
+            type: "paragraph",
+            text: "反例把部署当成“包一层 fetch”。正确做法是输入 schema、总超时、onError 分类、响应前走 guard（与 S10 共用）、traceId 从浏览器注入响应头。Lab L08 的 API 门禁测试可约束“非法输入 400、护栏失败不 200”。",
+          },
+        ],
+      },
+      {
         id: "observability",
         title: "观察四类信号",
         blocks: [
@@ -1806,14 +1844,76 @@ export function useAgentChat(threadId: string) {
             type: "paragraph",
             text: "部署拓扑取决于任务时长。普通问答可以在单个 HTTP 请求中完成；超过网关超时的研究或批处理任务应写入队列，API 立即返回 runId，Worker 执行后通过 SSE、WebSocket 或轮询更新。无论哪种方式，都要传播 AbortSignal：用户取消后停止后续模型与工具调用。Serverless 环境要注意冷启动、连接池和文件系统限制；长状态任务更适合常驻 Worker。前端应把服务端事件映射为稳定状态，而不是把模型 token 直接当作业务状态。",
           },
+        ],
+      },
+      {
+        id: "deploy-failures",
+        title: "部署与可观测失败分类与调试",
+        blocks: [
+          {
+            type: "paragraph",
+            text: "线上 Agent「失败」要先区分 API 门禁、运行时与前端状态机。调试时用 traceId 拉全链：若 API 200 但答案违规，查护栏是否被绕过；若 P95 飙升，看是模型首 token 还是某个 MCP 工具；若用户说“取消了还在扣费”，查 AbortSignal 是否传到 invoke。切忌只加日志字符串不设 failure_class——无法驱动降级策略。",
+          },
+          {
+            type: "table",
+            headers: ["failure_class", "现象", "调试与修复"],
+            rows: [
+              ["input_reject", "400 但客户端未提示", "Zod 错误码映射；前端展示字段级原因"],
+              ["timeout_abort", "45s 后 500，工具仍跑", "signal 传入 agent；工具层监听 abort"],
+              ["guard_bypass", "泄露 secret 仍 200", "统一响应出口调用 guard；Lab L08 路由单测"],
+              ["trace_break", "工具日志对不上用户会话", "traceId 头透传；子进程日志带同一 id"],
+              ["cost_runaway", "单 thread 多轮调用", "recursionLimit；每日预算；模型降级"],
+              ["stale_ui", "关页后仍显示 running", "fetch abort；SSE 断线重连策略"],
+            ],
+          },
+          {
+            type: "callout",
+            tone: "note",
+            title: "调试习惯",
+            text: "用 curl 带 x-trace-id 复现一次失败，再在同一 id 下搜 API、Agent、工具日志。面试谈到“如何上线 Agent”时，说出超时/取消/限流/ trace 四类门禁，比只提框架名更可信。",
+          },
+        ],
+      },
+      {
+        id: "interview-deploy",
+        title: "面试常问：部署、监控与前端契约",
+        blocks: [
+          {
+            type: "table",
+            headers: ["追问", "答纲要点"],
+            rows: [
+              ["同步 API 和队列怎么选？", "交互且在超时内 → 同步；长任务 → runId + 推送/轮询。"],
+              ["用户取消如何传到 Agent？", "AbortController → invoke signal → 工具超时联动。"],
+              ["四类信号各看什么？", "可靠性/延迟/成本/质量；分别阈值与报警。"],
+              ["前端为何要状态机而非纯 token？", "工具/确认/错误是业务事件；token 只是呈现层。"],
+              ["与 S10 护栏如何衔接？", "API 返回前 guard；失败分类进 trace 与评估集。"],
+            ],
+          },
+          {
+            type: "paragraph",
+            text: "面试常追问多租户与合规：threadId 绑定用户、日志脱敏、灰度回滚。结合本章 Hono 示例与 Lab L08 API 门禁，能讲清「何时用 / 何时不用」同步暴露，即具备 S11 工程化叙事。",
+          },
+        ],
+      },
+      {
+        id: "lab-deploy",
+        title: "动手验证",
+        blocks: [
+          {
+            type: "callout",
+            tone: "success",
+            title: "配套 Lab L08",
+            text: "仓库路径 examples/lab-l08-eval-guardrail：除轨迹断言外，实现 API 输入校验与响应前护栏（与 eval-security 同源），vitest 覆盖非法 body、护栏拦截与合法路径。站点章节 /chapter/lab-l08 与本课 Hono /api/chat 对照，把 guard 与 traceId 接到真实服务。",
+          },
           {
             type: "checkpoint",
-            title: "本章自检",
+            title: "上岗自检（部署与监控）",
             criteria: [
-              "输入有长度校验、鉴权、限流和 45 秒总超时",
+              "能说明「何时用 / 何时不用」同步 Agent API，并指出无 trace 反例",
+              "输入有长度校验、鉴权、限流和 45 秒总超时，且 signal 可取消",
               "前端能区分运行、成功、失败与等待确认",
               "一次请求可通过 traceId 还原完整工具轨迹",
-              "有每日成本上限和模型/工具降级策略",
+              "失败能归类 timeout_abort / guard_bypass 等；能根据面试表讲清队列与四类信号",
             ],
           },
         ],
