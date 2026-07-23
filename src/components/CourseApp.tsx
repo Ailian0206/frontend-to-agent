@@ -452,7 +452,7 @@ export function CourseApp({
         </div>
 
         <button className="search-trigger" type="button" onClick={openSearch} aria-label="搜索课程" title="搜索当前课程">
-          <Search size={18} strokeWidth={2} aria-hidden="true" />
+          <Search size={15} strokeWidth={2} aria-hidden="true" />
           <span>搜索当前课程</span>
         </button>
 
