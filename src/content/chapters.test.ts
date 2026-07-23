@@ -178,14 +178,19 @@ describe("course content", () => {
 
     for (const chapter of platformLessons) {
       const blocks = chapter.sections.flatMap((section) => section.blocks);
-      const text = blocks.map(blockSearchText).join(" ");
+      const text = [
+        chapter.title,
+        ...chapter.sections.map((section) => section.title),
+        ...blocks.map(blockSearchText),
+      ].join(" ");
 
       expect(text).toMatch(/是什么|职责/);
       expect(text).toMatch(/不负责/);
       expect(text).toMatch(/正常/);
       expect(text).toMatch(/异常/);
       expect(text).toMatch(/只读|普通变更|高风险/);
-      expect(text).toContain("Evidence Graph");
+      // Screenshots stay; learner-facing copy uses generic “脱敏案例”, not a private project name.
+      expect(text).toMatch(/脱敏案例/);
       expect(blocks.filter((block) => block.type === "screenshot")).toHaveLength(3);
       expect(blocks.some((block) => block.type === "resources")).toBe(true);
       expect(blocks.some((block) => block.type === "checkpoint")).toBe(true);

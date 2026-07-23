@@ -204,8 +204,8 @@ export const vercelCoreOperationsChapter: Omit<Chapter, "number"> = {
       ],
     },
     {
-      id: "evidence-graph-case",
-      title: "Evidence Graph 只读检查与停止条件",
+      id: "desensitized-case-readonly",
+      title: "脱敏案例：只读检查与停止条件",
       blocks: [
         {
           type: "steps",
@@ -213,7 +213,7 @@ export const vercelCoreOperationsChapter: Omit<Chapter, "number"> = {
             { title: "确认当前 Production Deployment", detail: "在 Deployments 按 Production 筛选，记录 Ready 状态、时间和版本证据。" },
             { title: "查看构建结论", detail: "只读打开该 Deployment 的 Build Logs，确认完成并记录警告，不复制私有输出。" },
             { title: "核对变量作用域", detail: "只查看变量名、Sensitive 标记和 Production / Preview 标签，不展开或复制值。" },
-            { title: "形成结论后停止", detail: "若版本与作用域都正确，记录 Evidence Graph 的检查时间和后台链接，不执行 Redeploy 或编辑变量。" },
+            { title: "形成结论后停止", detail: "若版本与作用域都正确，记录本次检查时间和后台链接，不执行 Redeploy 或编辑变量。" },
           ],
         },
         {
@@ -272,7 +272,7 @@ export const vercelCoreOperationsChapter: Omit<Chapter, "number"> = {
             "能从 Deployments 判断目标环境、状态、时间和当前版本",
             "能区分 Build Logs 与 Runtime Logs 各自回答的问题",
             "能说明 NEXT_PUBLIC_* 与服务端机密的边界，并在写操作前停止",
-            "能完成一次 Evidence Graph 只读检查且不展开变量值、不触发部署",
+            "能完成一次脱敏案例只读检查且不展开变量值、不触发部署",
           ],
         },
       ],
@@ -457,13 +457,13 @@ export const vercelReleaseObservabilityChapter: Omit<Chapter, "number"> = {
           type: "callout",
           tone: "warning",
           title: "高风险动作前的最低条件",
-          text: "执行 Promote、Rollback、改 Production 变量或套餐前，必须确认目标版本、数据库兼容性、后台任务副作用、验收路径、负责人和恢复方式。本课程只做决策练习，不操作 Evidence Graph 生产环境。",
+          text: "执行 Promote、Rollback、改 Production 变量或套餐前，必须确认目标版本、数据库兼容性、后台任务副作用、验收路径、负责人和恢复方式。本课程只做决策练习，不操作真实生产环境。",
         },
       ],
     },
     {
-      id: "evidence-graph-case",
-      title: "Evidence Graph 发布后只读验收",
+      id: "desensitized-case-release",
+      title: "脱敏案例：发布后只读验收",
       blocks: [
         {
           type: "steps",
@@ -477,7 +477,7 @@ export const vercelReleaseObservabilityChapter: Omit<Chapter, "number"> = {
         },
         {
           type: "paragraph",
-          text: "Evidence Graph 案例只展示经过脱敏的真实界面。截图中的账号、项目、域名、提交、请求路径和消息均已遮挡；它用于学习入口与判断，不证明当前线上仍处于同一状态。",
+          text: "脱敏案例只展示经过脱敏的真实界面。截图中的账号、项目、域名、提交、请求路径和消息均已遮挡；它用于学习入口与判断，不证明当前线上仍处于同一状态。",
         },
       ],
     },
@@ -520,7 +520,7 @@ export const vercelReleaseObservabilityChapter: Omit<Chapter, "number"> = {
             "能用 Deployment 详情完成版本、环境、时间和关键路径验收",
             "能从 Ready 但页面异常的症状进入 Runtime Logs，并知道何时转到 Supabase、Inngest 或 Sentry",
             "能用 Analytics、Observability、Logs 与 Usage 回答不同问题",
-            "能为 Evidence Graph 写出观察、修复或回滚评估结论，并在高风险按钮前停止",
+            "能为本次脱敏案例写出观察、修复或回滚评估结论，并在高风险按钮前停止",
           ],
         },
       ],

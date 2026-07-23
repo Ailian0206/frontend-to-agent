@@ -112,7 +112,7 @@ export const releaseChecksRollbackChapter: Omit<Chapter, "number"> = {
         },
         {
           type: "paragraph",
-          text: "Evidence Graph 的发布记录只做只读验收，不执行生产 Redeploy、Promote、Rollback、迁移、Replay 或密钥修改。记录完成后要明确“没有发现需处理信号”或列出下一步负责人。",
+          text: "本案例的发布记录只做只读验收，不执行生产 Redeploy、Promote、Rollback、迁移、Replay 或密钥修改。记录完成后要明确“没有发现需处理信号”或列出下一步负责人。",
         },
         {
           type: "checkpoint",
@@ -327,7 +327,7 @@ export const productionSecurityCostRecoveryChapter: Omit<Chapter, "number"> = {
         {
           type: "steps",
           items: [
-            { title: "选择隔离目标", detail: "恢复到新项目或本地副本，不覆盖 evidence-graph 生产数据。" },
+            { title: "选择隔离目标", detail: "恢复到新项目或本地副本，不覆盖真实生产数据。" },
             { title: "恢复数据库", detail: "验证 Schema、迁移、关键只读查询和 RLS，不仅看恢复按钮成功。" },
             { title: "恢复应用配置", detail: "用练习变量部署 Vercel，配置 Auth Redirect 和最小 Inngest fixture。" },
             { title: "验证观测", detail: "触发受控错误，确认 Sentry Issue / Trace，查看 Inngest Run 和 Vercel Logs。" },
@@ -342,7 +342,7 @@ export const productionSecurityCostRecoveryChapter: Omit<Chapter, "number"> = {
         },
         {
           type: "paragraph",
-          text: "Evidence Graph 只读检查可以记录备份入口、Usage 趋势、权限状态和恢复准备度，不下载生产数据、不恢复生产项目、不触发付费升级。",
+          text: "本案例只读检查可以记录备份入口、Usage 趋势、权限状态和恢复准备度，不下载生产数据、不恢复生产项目、不触发付费升级。",
         },
       ],
     },
@@ -404,13 +404,13 @@ export const observableProductionPracticumChapter: Omit<Chapter, "number"> = {
       blocks: [
         {
           type: "paragraph",
-          text: "P14 不是对 evidence-graph 生产环境的操作清单，而是一个隔离练习。新建 GitHub 仓库、Supabase 项目、Vercel 项目和 Inngest App，使用 fixture 数据和无外部 Provider 的 hello-run；Sentry 只接收练习环境的受控错误。",
+          text: "P14 不是对真实生产环境的操作清单，而是一个隔离练习。新建 GitHub 仓库、Supabase 项目、Vercel 项目和 Inngest App，使用 fixture 数据和无外部 Provider 的 hello-run；Sentry 只接收练习环境的受控错误。",
         },
         {
           type: "table",
           headers: ["资源", "练习规则", "禁止复用"],
           rows: [
-            ["GitHub", "新仓库、最小 README、无生产密钥", "evidence-graph 仓库与生产分支"],
+            ["GitHub", "新仓库、最小 README、无生产密钥", "已有生产仓库与生产分支"],
             ["Supabase", "独立项目、最小迁移、假用户或本地 fixture", "生产数据库、真实用户和备份"],
             ["Vercel", "Preview / Production 变量分离", "正式域名和生产 Secret"],
             ["Inngest", "hello-run 与可重复 fixture Event", "真实通知、扣费或不可逆任务"],
@@ -484,7 +484,7 @@ export const observableProductionPracticumChapter: Omit<Chapter, "number"> = {
         },
         {
           type: "paragraph",
-          text: "Evidence Graph 在 P14 只作为对照案例：学习者应能解释为什么同样的 Vercel、Supabase、Inngest、Sentry 步骤不能直接套到生产项目。所有写操作、故障注入和资源清理都限定在独立练习环境。",
+          text: "本案例在 P14 只作为对照：学习者应能解释为什么同样的 Vercel、Supabase、Inngest、Sentry 步骤不能直接套到生产项目。所有写操作、故障注入和资源清理都限定在独立练习环境。",
         },
         {
           type: "callout",

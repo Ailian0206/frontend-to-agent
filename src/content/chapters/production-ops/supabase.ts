@@ -115,7 +115,7 @@ export const supabaseDatabaseMigrationsChapter: Omit<Chapter, "number"> = {
         },
         {
           type: "paragraph",
-          text: "Evidence Graph 案例只确认预期 Schema 和表是否存在，不打开真实研究正文或用户行。表结构与仓库迁移不一致时先停止，保存脱敏结构证据，再在本地复现差异。",
+          text: "本案例只确认预期 Schema 和表是否存在，不打开真实研究正文或用户行。表结构与仓库迁移不一致时先停止，保存脱敏结构证据，再在本地复现差异。",
         },
       ],
     },
@@ -156,7 +156,7 @@ export const supabaseDatabaseMigrationsChapter: Omit<Chapter, "number"> = {
           items: [
             { title: "写向前兼容迁移", detail: "优先新增可空列、表或索引，避免同一发布立即删除旧代码仍读取的结构。" },
             { title: "本地验证", detail: "从空库和现有快照分别应用迁移，确认可重复执行的边界和失败处理。" },
-            { title: "Preview 验收", detail: "在隔离项目验证 API、RLS、Auth 与应用版本，不连接 Evidence Graph 生产数据。" },
+            { title: "Preview 验收", detail: "在隔离项目验证 API、RLS、Auth 与应用版本，不连接真实生产数据。" },
             { title: "生产执行与只读核对", detail: "执行需要独立确认；完成后只读检查版本、结构、关键查询和错误趋势。" },
           ],
         },
@@ -190,7 +190,7 @@ export const supabaseDatabaseMigrationsChapter: Omit<Chapter, "number"> = {
     },
     {
       id: "evidence-risk",
-      title: "Evidence Graph 只读案例、风险与停止条件",
+      title: "脱敏案例：只读检查、风险与停止条件",
       blocks: [
         {
           type: "steps",
@@ -476,7 +476,7 @@ export const supabaseAuthRlsRecoveryChapter: Omit<Chapter, "number"> = {
     },
     {
       id: "evidence-risk",
-      title: "Evidence Graph 只读案例与风险分级",
+      title: "脱敏案例：只读检查与风险分级",
       blocks: [
         {
           type: "steps",
@@ -493,7 +493,7 @@ export const supabaseAuthRlsRecoveryChapter: Omit<Chapter, "number"> = {
           rows: [
             ["只读", "查看 Provider、Policy、日志和备份能力", "允许在生产执行，严格脱敏"],
             ["普通变更", "在练习项目改 Redirect、Provider、Policy", "用允许 / 拒绝测试验收"],
-            ["高风险", "Disable RLS、轮换密钥、恢复备份、升级套餐", "Evidence Graph 不执行，另行确认"],
+            ["高风险", "Disable RLS、轮换密钥、恢复备份、升级套餐", "本课不执行，另行确认"],
           ],
         },
         {
@@ -539,7 +539,7 @@ export const supabaseAuthRlsRecoveryChapter: Omit<Chapter, "number"> = {
             "能区分登录失败和 RLS 权限拒绝的第一个证据入口",
             "能说明 publishable / anon 与 secret / service role 的浏览器边界",
             "能说明备份为什么不等于恢复成功，并列出隔离恢复验收项",
-            "能完成 Evidence Graph 只读检查，并在 RLS、密钥、恢复和费用按钮前停止",
+            "能完成一次脱敏案例只读检查，并在 RLS、密钥、恢复和费用按钮前停止",
           ],
         },
       ],

@@ -159,7 +159,7 @@ export const inngestEventsFunctionsRunsChapter: Omit<Chapter, "number"> = {
     },
     {
       id: "evidence-case",
-      title: "Evidence Graph 只读案例与风险",
+      title: "脱敏案例：只读检查与风险",
       blocks: [
         {
           type: "steps",
@@ -172,7 +172,7 @@ export const inngestEventsFunctionsRunsChapter: Omit<Chapter, "number"> = {
         },
         {
           type: "paragraph",
-          text: "Evidence Graph 案例只读 App、Event 和 Run 的状态与时间线；不发送事件、不打开完整 payload，也不把脱敏截图当作当前生产状态证明。",
+          text: "本案例只读 App、Event 和 Run 的状态与时间线；不发送事件、不打开完整 payload，也不把脱敏截图当作当前生产状态证明。",
         },
         {
           type: "table",
@@ -352,7 +352,7 @@ export const inngestRetriesConcurrencyCostChapter: Omit<Chapter, "number"> = {
           type: "callout",
           tone: "warning",
           title: "生产重放需要单独确认",
-          text: "重放属于普通变更或高风险动作，取决于副作用。必须先确认幂等键、下游状态、重复通知策略、最大数量和停止办法；本课程不在 Evidence Graph 生产重放。",
+          text: "重放属于普通变更或高风险动作，取决于副作用。必须先确认幂等键、下游状态、重复通知策略、最大数量和停止办法；本课程不在真实生产环境重放。",
         },
       ],
     },
@@ -424,7 +424,7 @@ export const inngestRetriesConcurrencyCostChapter: Omit<Chapter, "number"> = {
     },
     {
       id: "evidence-case",
-      title: "Evidence Graph 只读检查与停止条件",
+      title: "脱敏案例：只读检查与停止条件",
       blocks: [
         {
           type: "steps",
@@ -437,7 +437,7 @@ export const inngestRetriesConcurrencyCostChapter: Omit<Chapter, "number"> = {
         },
         {
           type: "paragraph",
-          text: "Evidence Graph 的重试与成本检查只读失败率、耗时、积压和 Usage 趋势；任何 Replay、Rerun、Cancel 或并发修改都留到独立练习环境。",
+          text: "本案例的重试与成本检查只读失败率、耗时、积压和 Usage 趋势；任何 Replay、Rerun、Cancel 或并发修改都留到独立练习环境。",
         },
         {
           type: "table",

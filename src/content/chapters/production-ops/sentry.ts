@@ -181,7 +181,7 @@ export const sentryIssuesReleasesSourcemapsChapter: Omit<Chapter, "number"> = {
     },
     {
       id: "evidence-case",
-      title: "Evidence Graph 只读案例与风险",
+      title: "脱敏案例：只读检查与风险",
       blocks: [
         {
           type: "steps",
@@ -194,7 +194,7 @@ export const sentryIssuesReleasesSourcemapsChapter: Omit<Chapter, "number"> = {
         },
         {
           type: "paragraph",
-          text: "Evidence Graph 案例只读 Issue、Event、Release 和 Highlights；所有真实项目名、域名、Issue / Event / Trace ID、请求路径与错误正文均已遮挡。",
+          text: "本案例只读 Issue、Event、Release 和 Highlights；所有真实项目名、域名、Issue / Event / Trace ID、请求路径与错误正文均已遮挡。",
         },
         {
           type: "table",
@@ -240,7 +240,7 @@ export const sentryIssuesReleasesSourcemapsChapter: Omit<Chapter, "number"> = {
             "能从 Issues 选择代表 Event，并按 Environment、Release、时间和趋势判断回归",
             "能说明 Source Map 缺失时先查版本与上传，而不是直接换模型或回滚",
             "能把 Sentry 线索与 Vercel、Supabase、Inngest 的事实日志串联",
-            "能完成 Evidence Graph 只读检查，并在导出、隐私和批量状态按钮前停止",
+            "能完成一次脱敏案例只读检查，并在导出、隐私和批量状态按钮前停止",
           ],
         },
       ],
@@ -444,7 +444,7 @@ export const sentryTracesAlertsPrivacyChapter: Omit<Chapter, "number"> = {
     },
     {
       id: "evidence-case",
-      title: "Evidence Graph 只读案例与停止条件",
+      title: "脱敏案例：只读检查与停止条件",
       blocks: [
         {
           type: "steps",
@@ -457,7 +457,7 @@ export const sentryTracesAlertsPrivacyChapter: Omit<Chapter, "number"> = {
         },
         {
           type: "paragraph",
-          text: "Evidence Graph 的 Sentry 案例只读错误、Trace、告警、用量和隐私入口；截图中的组织、项目、用户、ID、路径、Release SHA 和状态均已遮挡，不代表当前线上配置。",
+          text: "本案例只读错误、Trace、告警、用量和隐私入口；截图中的组织、项目、用户、ID、路径、Release SHA 和状态均已遮挡，不代表当前线上配置。",
         },
         {
           type: "table",
@@ -504,7 +504,7 @@ export const sentryTracesAlertsPrivacyChapter: Omit<Chapter, "number"> = {
             "能从 Trace 找到慢的 Transaction / Span，并回到 Vercel、Supabase 或 Inngest 验证",
             "能为告警写出阈值、负责人、证据入口和关闭标准",
             "能说明为什么隐私清理、采样和用量要同时在 SDK 与组织设置检查",
-            "能完成 Evidence Graph 只读巡检，并在导出、关闭隐私或批量修改前停止",
+            "能完成一次脱敏案例只读巡检，并在导出、关闭隐私或批量修改前停止",
           ],
         },
       ],

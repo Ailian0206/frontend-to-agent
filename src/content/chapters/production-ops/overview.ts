@@ -9,7 +9,7 @@ export const productionOpsIntroChapter: Omit<Chapter, "number"> = {
   shortTitle: "托管生产系统地图",
   phase: "生产入门",
   track: "工程上线",
-  tags: ["系统地图", "环境", "职责边界", "Evidence Graph"],
+  tags: ["系统地图", "环境", "职责边界", "脱敏案例"],
   duration: "40 分钟",
   level: "基础",
   goal: "能画出 Vercel、Supabase、Inngest、Sentry 的协作链路，并在查看生产控制台前先判断操作风险。",
@@ -104,12 +104,12 @@ export const productionOpsIntroChapter: Omit<Chapter, "number"> = {
       ],
     },
     {
-      id: "evidence-graph-case",
-      title: "Evidence Graph 只读案例",
+      id: "desensitized-case",
+      title: "脱敏案例：只读检查",
       blocks: [
         {
           type: "paragraph",
-          text: "本专题把 evidence-graph 当作脱敏生产案例：查看 Vercel 当前 Deployment，确认 Supabase 服务可用，检查 Inngest 是否有失败 Run，再查看 Sentry 是否出现同一时间的新 Issue。案例只说明怎样读取信号，不公开项目名、账号、域名、ID、错误正文或生产数据。",
+          text: "本专题用脱敏生产案例截图说明：查看 Vercel 当前 Deployment，确认 Supabase 服务可用，检查 Inngest 是否有失败 Run，再查看 Sentry 是否出现同一时间的新 Issue。案例只说明怎样读取信号，不公开项目名、账号、域名、ID、错误正文或生产数据。",
         },
         {
           type: "table",
@@ -143,7 +143,7 @@ export const productionOpsIntroChapter: Omit<Chapter, "number"> = {
             "能画出 Browser → Vercel → Supabase / Inngest → Sentry 的关系",
             "能说明 Development、Preview、Production 的数据和变量不能混用",
             "能为查看日志、重放任务、恢复备份分别标注只读、普通变更、高风险",
-            "能说出 evidence-graph 案例的边界：只读、脱敏、不执行生产写操作",
+            "能说出脱敏案例的边界：只读、脱敏、不执行生产写操作",
           ],
         },
       ],
@@ -277,7 +277,7 @@ export const productionInspectionRhythmChapter: Omit<Chapter, "number"> = {
         },
         {
           type: "paragraph",
-          text: "Evidence Graph 示例巡检只读取四个平台：确认 Vercel 当前版本，查看 Supabase 服务与异常日志，筛选 Inngest 失败 Run，再核对 Sentry 新 Issue。若四处均无异常，就写下“未发现需处理信号”并结束，不为制造工作而执行普通变更。",
+          text: "示例巡检只读取四个平台：确认 Vercel 当前版本，查看 Supabase 服务与异常日志，筛选 Inngest 失败 Run，再核对 Sentry 新 Issue。若四处均无异常，就写下“未发现需处理信号”并结束，不为制造工作而执行普通变更。",
         },
         {
           type: "callout",
@@ -292,7 +292,7 @@ export const productionInspectionRhythmChapter: Omit<Chapter, "number"> = {
             "能在十分钟内完成一次只读巡检并留下时间、版本、证据和结论",
             "能分别列出发布后、每日、每周、每月与故障时的最小检查项",
             "能把一个信号判断为正常、可疑或需处理，并说明下一步",
-            "遇到普通变更或高风险按钮时能停止，不在 evidence-graph 生产环境练习写操作",
+            "遇到普通变更或高风险按钮时能停止，不在真实生产环境练习写操作",
           ],
         },
       ],
