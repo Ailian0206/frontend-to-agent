@@ -166,9 +166,9 @@ a {
 .search-trigger {
   display: grid;
   width: 100%;
-  height: 46px;
+  min-height: 48px;
   margin: 14px 0 18px;
-  padding: 0 14px;
+  padding: 12px 14px;
   grid-template-columns: auto 1fr;
   align-items: center;
   gap: 11px;
@@ -180,6 +180,8 @@ a {
     inset 0 1px 0 rgba(255, 255, 255, 0.9);
   color: var(--muted);
   text-align: left;
+  appearance: none;
+  -webkit-appearance: none;
   transition:
     border-color 160ms ease,
     background-color 160ms ease,
