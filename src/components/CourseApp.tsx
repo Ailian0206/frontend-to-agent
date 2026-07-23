@@ -442,6 +442,7 @@ export function CourseApp({
                 role="tab"
                 className={selected ? "active" : ""}
                 aria-selected={selected}
+                title={item.title}
                 onClick={() => selectCurriculum(item.id)}
               >
                 {item.shortTitle}
@@ -450,8 +451,10 @@ export function CourseApp({
           })}
         </div>
 
-        <button className="search-trigger" type="button" onClick={openSearch} aria-label="搜索课程">
-          <Search size={17} /><span>搜索当前课程</span><kbd>/</kbd>
+        <button className="search-trigger" type="button" onClick={openSearch} aria-label="搜索课程" title="搜索当前课程（快捷键 /）">
+          <Search size={16} strokeWidth={2.1} aria-hidden="true" />
+          <span>搜索当前课程</span>
+          <kbd>/</kbd>
         </button>
 
         <nav aria-label="课程章节">

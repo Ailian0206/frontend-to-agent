@@ -166,35 +166,75 @@ a {
 .search-trigger {
   display: grid;
   width: 100%;
-  height: 40px;
-  margin: 18px 0 20px;
-  padding: 0 10px;
+  height: 42px;
+  margin: 12px 0 18px;
+  padding: 0 12px;
   grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
   border: 1px solid var(--line-strong);
-  border-radius: 4px;
-  background: rgba(253, 253, 249, 0.7);
+  border-radius: 8px;
+  background: var(--paper-strong);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
   color: var(--muted);
   text-align: left;
-  transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.search-trigger > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  letter-spacing: 0.01em;
+}
+
+.search-trigger > svg {
+  flex: 0 0 auto;
+  color: var(--ink-soft);
+  opacity: 0.72;
 }
 
 .search-trigger:hover {
+  border-color: var(--ink-soft);
+  background: #fff;
+  color: var(--ink-soft);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 1px 2px rgba(27, 29, 28, 0.04);
+}
+
+.search-trigger:hover > svg {
+  opacity: 1;
+  color: var(--ink);
+}
+
+.search-trigger:focus-visible {
   border-color: var(--ink);
-  background: var(--paper-strong);
+  color: var(--ink);
 }
 
 kbd {
   display: inline-grid;
-  min-width: 23px;
+  min-width: 24px;
   height: 22px;
   place-items: center;
   border: 1px solid var(--line);
   border-bottom-color: var(--line-strong);
-  border-radius: 3px;
-  background: white;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--paper) 70%, white);
+  color: var(--ink-soft);
   font: 11px/1 var(--font-mono);
+  font-weight: 600;
+}
+
+.search-trigger kbd {
+  background: #eef0eb;
 }
 
 .nav-label,
@@ -1491,31 +1531,54 @@ tbody tr:hover td {
 .curriculum-switcher {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 6px;
-  margin: 0 0 12px;
-  padding: 4px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--panel) 88%, var(--ink) 12%);
+  gap: 3px;
+  margin: 14px 0 0;
+  padding: 3px;
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--ink) 7%, #eceee9);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 .curriculum-switcher button {
   appearance: none;
-  border: 0;
+  position: relative;
+  min-height: 36px;
+  border: 1px solid transparent;
   border-radius: 7px;
-  padding: 8px 6px;
+  padding: 7px 8px;
   background: transparent;
   color: var(--muted);
   font: inherit;
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
   cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.curriculum-switcher button:hover:not(.active) {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--paper-strong) 58%, transparent);
 }
 
 .curriculum-switcher button.active {
-  background: var(--panel);
+  border-color: color-mix(in srgb, var(--ink) 12%, transparent);
+  background: var(--paper-strong);
   color: var(--ink);
-  box-shadow: 0 1px 0 color-mix(in srgb, var(--ink) 12%, transparent);
+  box-shadow:
+    0 1px 2px rgba(27, 29, 28, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+.curriculum-switcher button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 
 .kind-toggle {
